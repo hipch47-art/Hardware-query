@@ -41,11 +41,13 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
 .small{font-size:13px;color:#687386}
 @media(max-width:600px){.menuGrid,.comboGrid{grid-template-columns:1fr}}
 
-/* Filter Simulation V8.0 */
-.filterPage *{box-sizing:border-box}.filterPage body{margin:0;background:#f3f5f8;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang TC",Arial,sans-serif}.filterPage header{position:sticky;top:0;z-index:10;background:#17365d;color:#fff;padding:14px 16px;font-weight:800;font-size:20px}.filterPage main{max-width:980px;margin:auto;padding:12px}.filterPage .card{background:#fff;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 3px 18px #00000012}.filterPage .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.filterPage label{font-size:13px;color:#657086;font-weight:700;display:block}.filterPage input,.filterPage select,.filterPage button{width:100%;border:1px solid #d4dbe6;border-radius:12px;padding:11px;background:#fff;font-size:16px}.filterPage button{background:#2868a8;color:#fff;border:0;font-weight:800}.filterPage h2{font-size:18px;margin:0 0 12px}.filterPage .small{font-size:12px;color:#69758a}.filterPage .spec{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.filterPage .spec b{display:block;font-size:17px;margin-top:3px}.filterPage #schematic{width:100%;min-height:180px;overflow-x:auto;overflow-y:hidden;border:1px solid #e0e5ed;border-radius:14px;background:#fbfcfe}.filterPage #schematic svg{min-width:720px;display:block}.filterPage .autoNote{font-size:12px;color:#69758a}.filterPage #chart{width:100%;height:310px;border:1px solid #e0e5ed;border-radius:14px;background:#fff;display:block;touch-action:none}.filterPage .markerBox{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.filterPage .markerBox div{background:#f6f8fb;border-radius:12px;padding:10px}.filterPage .markerValue{font-size:18px;font-weight:800;margin-top:3px}.filterPage .tuning{display:grid;grid-template-columns:1fr 70px 70px 70px;gap:8px;align-items:center;margin:8px 0}.filterPage .tuning .value{text-align:center;font-weight:800;padding:11px 4px;border:1px solid #d4dbe6;border-radius:12px;background:#f8fafc}.filterPage .minus,.filterPage .plus{font-size:20px;padding:9px}.filterPage .curveToggle{display:flex;gap:10px;margin:0 0 10px;flex-wrap:wrap}.filterPage .check{display:flex;align-items:center;gap:6px;padding:9px 12px;border:1px solid #d4dbe6;border-radius:12px;background:#f8fafc;color:#172033;font-size:14px}.filterPage .check input{width:20px;height:20px;margin:0}.filterPage .check span{font-size:12px;color:#69758a;font-weight:500}.filterPage .badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#edf4ff;color:#245c99;font-size:12px;font-weight:800}
-@media(max-width:650px){.filterPage .grid,.filterPage .spec{grid-template-columns:repeat(2,1fr)}.filterPage #schematic{height:170px}.filterPage #chart{height:270px}.filterPage .tuning{grid-template-columns:1fr 54px 90px 54px}
-}.filterPage .tunePanel,.filterPage .scalePanel{margin-top:12px;padding:12px;border:1px solid #e0e5ed;border-radius:14px;background:#fbfcfe}.filterPage .tunePanel h3,.filterPage .scalePanel h3{margin:0 0 6px;font-size:16px}.filterPage .tuning button{font-size:20px;font-weight:800;min-height:44px}.filterPage .tuning .value{min-height:44px;display:flex;align-items:center;justify-content:center}.filterPage .tunePanel #reset{width:100%;margin-top:10px}.filterPage .holdHint{font-size:11px;color:#69758a;margin-top:3px}.filterPage .tuning .value{user-select:none;-webkit-user-select:none}.filterPage .tuning button{touch-action:manipulation}
-
+.filterGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.filterGrid label{font-size:13px;color:#687386;font-weight:700}
+.filterGrid input,.filterGrid select{margin-top:5px}
+.filterNote{font-size:12px;color:#687386;line-height:1.6}
+#filterCanvas{width:100%;height:300px;border:1px solid #d8e0ea;border-radius:12px;background:#fff}
+.filterStat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+@media(max-width:600px){.filterGrid,.filterStat{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -68,7 +70,7 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
    <div class="menuGrid">
     <button class="menuBtn" onclick="showProduct()"><span>📦</span>產品查詢</button>
     <button class="menuBtn" onclick="showPart()"><span>🏷️</span>料號查詢</button>
-    <button class="menuBtn" onclick="showFilter()"><span>📡</span>Filter Simulation</button>
+     <button class="menuBtn" onclick="showFilter()"><span>📡</span>Filter Simulation</button>
    </div>
   </div>
  </div>
@@ -91,79 +93,49 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
   <div id="partResult"></div>
  </div>
 </div>
-<div id="filterPage" class="hidden filterPage">
-<header>📡 Filter Simulation V8.1 — Real Topology</header>
-<div style="padding:12px 12px 0"><button class="back" onclick="goHome()">← 回首頁</button></div>
-<main>
-<section class="card">
-<h2>⚙️ Filter Specification</h2>
-<div class="grid">
-<div><label>Path</label><select id="path"><option value="LPF">LPF</option><option value="HPF">HPF</option></select></div>
-<div><label>Port 1 Z (Ω)</label><input id="zPort1" type="number" value="75" min="0.1" step="0.1"></div>
-<div><label>Port 2 Z (Ω)</label><input id="zPort2" type="number" value="75" min="0.1" step="0.1"></div>
-<div><label>Order / Sections</label><input id="sectionCount" type="number" value="4" min="1" max="6" step="1"></div>
 </div>
-<div class="grid" style="margin-top:12px">
-<div><label>Passband Start (MHz)</label><input id="pbStart" type="number" value="5" step="0.001" min="0.001"></div>
-<div><label>Passband End (MHz)</label><input id="pbEnd" type="number" value="85" step="0.001" min="0.001"></div>
-<div><label>Stopband Start (MHz)</label><input id="sbStart" type="number" value="108" step="0.001" min="0.001"></div>
-<div><label>Stopband End (MHz)</label><input id="sbEnd" type="number" value="1218" step="0.001" min="0.001"></div>
-<div><label>Passband Ripple (dB)</label><input id="rippleDb" type="number" value="0.5" step="0.1" min="0"></div>
-<div><label>Rejection (dB)</label><input id="rejectionDb" type="number" value="40" step="1" min="0"></div>
-</div>
-<div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-<button id="autoCalc" type="button" style="max-width:220px">⚡ Auto Calculate</button>
-<button id="resetTopology" type="button" style="max-width:180px;background:#68758a">↻ Reset</button>
-<div id="autoStatus" class="autoNote">先用實際拓撲計算；Auto Calculate 目前提供設計起始值。</div>
-</div>
-<div class="spec" style="margin-top:12px">
-<div><label>Passband</label><b id="pbText">5–85 MHz</b></div>
-<div><label>Stopband</label><b id="sbText">108–1218 MHz</b></div>
-<div><label>Step L</label><b>1 nH</b></div>
-<div><label>Step C</label><b>1 pF</b></div>
-<div><label>Rejection</label><b id="rejText">40 dB</b></div>
-</div>
-</section>
 
-<section class="card">
-<h2>🔌 Actual Filter Topology <span class="badge">LPF / HPF</span></h2>
-<div id="schematic"></div>
-<div class="small" id="topologyNote"></div>
-</section>
-
-<section class="card">
-<h2>📈 Filter Response</h2>
-<div class="curveToggle">
-<label class="check"><input id="showS21" type="checkbox" checked> <b>S21</b> <span>Transmission</span></label>
-<label class="check"><input id="showS11" type="checkbox"> <b>S11</b> <span>Reflection</span></label>
+ <div id="filterPage" class="hidden">
+  <button class="back" onclick="goHome()">← 回首頁</button>
+  <div class="panel">
+   <h2>📡 Filter Simulation</h2>
+   <div class="filterNote">
+    工程用理想 LC Filter 模擬。可設定 Passband / Stopband、Z0、Filter Order，
+    並以 1 pF / 1 nH 步進即時微調元件。
+   </div>
+   <div class="filterGrid">
+    <div><label>Filter Type</label><select id="filterType" onchange="filterUpdate()"><option>LPF</option><option>HPF</option></select></div>
+    <div><label>Filter Order</label><select id="filterOrder" onchange="filterUpdate()"><option value="auto">Auto Calculate</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
+    <div><label>Z0 (Ω)</label><input id="filterZ0" type="number" value="75" step="1" oninput="filterUpdate()"></div>
+    <div><label>Stopband Attenuation (dB)</label><input id="filterAtt" type="number" value="40" step="1" oninput="filterUpdate()"></div>
+    <div><label>Passband Start (MHz)</label><input id="filterPBStart" type="number" value="5" step="1" oninput="filterUpdate()"></div>
+    <div><label>Passband End (MHz)</label><input id="filterPBEnd" type="number" value="85" step="1" oninput="filterUpdate()"></div>
+    <div><label>Stopband Start (MHz)</label><input id="filterSBStart" type="number" value="108" step="1" oninput="filterUpdate()"></div>
+    <div><label>Stopband End (MHz)</label><input id="filterSBEnd" type="number" value="1218" step="1" oninput="filterUpdate()"></div>
+   </div>
+  </div>
+  <div class="panel">
+   <h3>📈 S21 / Insertion Loss</h3>
+   <canvas id="filterCanvas"></canvas>
+   <div class="filterStat">
+    <div class="card"><div class="label">Calculated Order</div><div id="filterOrderResult" class="value">-</div></div>
+    <div class="card"><div class="label">Cutoff / Fc</div><div id="filterFcResult" class="value">-</div></div>
+   </div>
+  </div>
+  <div class="panel">
+   <h3>🔧 Component Tuning</h3>
+   <div id="filterComponents"></div>
+   <button onclick="filterReset()">↩️ Reset Components</button>
+  </div>
+  <div class="panel filterNote">
+   目前為理想 LC prototype；尚未加入實際 Q、ESR、SRF、PCB/package parasitic 與實測 S-parameter，
+   因此先用於架構與規格驗證，不作為量產 RF sign-off。
+  </div>
+ </div>
 </div>
-<canvas id="chart"></canvas>
-<div class="small" id="chartInfo"></div>
-<div class="markerBox">
-<div><label>Marker Frequency</label><div class="markerValue" id="markerFreq">0.000 MHz</div></div>
-<div><label id="markerLabel">Marker S21</label><div class="markerValue" id="markerDb">0.00 dB</div></div>
-</div>
-</section>
 
-<section class="card tunePanel">
-<h3>🔧 Manual Tune</h3>
-<div class="small">直接調整實際拓撲元件；L 每次 1 nH、C 每次 1 pF。任何改動都會重新計算 ABCD → S11/S21。</div>
-<div id="tuning"></div>
-</section>
-
-<section class="card scalePanel">
-<h3>📐 Plot Scale</h3>
-<div class="grid">
-<div><label>X Start (MHz)</label><input id="xStart" type="number" value="0" step="1"></div>
-<div><label>X Stop (MHz)</label><input id="xStop" type="number" value="1218" step="1"></div>
-<div><label>Y Top (dB)</label><input id="yTop" type="number" value="2" step="1"></div>
-<div><label>Y Bottom (dB)</label><input id="yBottom" type="number" value="-80" step="1"></div>
-</div>
-</section>
-
-<section class="card"><h3>🧾 Active Components</h3><div id="values" class="small"></div></section>
-</main>
-</div>
+<script src="data.js?v=3"></script>
+<script src="parts.js?v=3"></script>
 <script>
 const PASSWORD="-demo";
 let models=(typeof HITRON_DATA!=="undefined" && Array.isArray(HITRON_DATA))?HITRON_DATA:[];
@@ -185,11 +157,6 @@ function hidePages(){
  document.getElementById("partPage").classList.add("hidden");
  document.getElementById("filterPage").classList.add("hidden");
 }
-function showFilter(){
- hidePages();
- document.getElementById("filterPage").classList.remove("hidden");
- if(typeof drawAll === "function") requestAnimationFrame(()=>drawAll());
-}
 function goHome(){
  hidePages();
  document.getElementById("home").classList.remove("hidden");
@@ -204,6 +171,11 @@ function showPart(){
  hidePages();
  document.getElementById("partPage").classList.remove("hidden");
  document.getElementById("partSearch").focus();
+}
+function showFilter(){
+ hidePages();
+ document.getElementById("filterPage").classList.remove("hidden");
+ filterReset();
 }
 function loadModels(){
  const select=document.getElementById("modelSelect");
@@ -294,239 +266,134 @@ function showPartDetail(p){
   '<button class="back" onclick="runPartSearch()">← 回搜尋結果</button>'+
   fields.map(k=>`<div class="card"><div class="label">${safe(k)}</div><div class="value">${safe(p[k]||"-")}</div></div>`).join("");
 }
+
+// ===== Filter Simulation =====
+const FILTER_G={
+2:[1.41421356,1.41421356],
+3:[1,2,1],
+4:[0.76536686,1.84775907,1.84775907,0.76536686],
+5:[0.61803399,1.61803399,2,1.61803399,0.61803399],
+6:[0.51763809,1.41421356,1.93185165,1.93185165,1.41421356,0.51763809],
+7:[0.44504187,1.2469796,1.80193774,2,1.80193774,1.2469796,0.44504187],
+8:[0.39018064,1.11114047,1.96157056,1.66293922,1.66293922,1.96157056,1.11114047,0.39018064],
+9:[0.34729636,0.99999999,1.53208889,1.87938524,2,1.87938524,1.53208889,0.99999999,0.34729636],
+10:[0.31286893,0.90798099,1.97537668,1.78201305,1.61803399,1.78201305,1.97537668,0.90798099,0.31286893]
+};
+let filterParts=[];
+
+function filterOrderAuto(){
+ const pb=Number(document.getElementById("filterPBEnd").value)||85;
+ const sb=Number(document.getElementById("filterSBStart").value)||108;
+ const att=Number(document.getElementById("filterAtt").value)||40;
+ const ratio=sb/pb;
+ const n=Math.ceil(Math.log10(Math.pow(10,att/10)-1)/(2*Math.log10(ratio)));
+ return Math.max(2,Math.min(10,n));
+}
+function filterDesign(){
+ const type=document.getElementById("filterType").value;
+ const z=Number(document.getElementById("filterZ0").value)||75;
+ const pbStart=Number(document.getElementById("filterPBStart").value)||5;
+ const pbEnd=Number(document.getElementById("filterPBEnd").value)||85;
+ const sbStart=Number(document.getElementById("filterSBStart").value)||108;
+ const sbEnd=Number(document.getElementById("filterSBEnd").value)||1218;
+ const sel=document.getElementById("filterOrder").value;
+ const n=sel==="auto"?filterOrderAuto():Number(sel);
+ const fc=(type==="LPF"?pbEnd:pbStart)*1e6;
+ const g=FILTER_G[n];
+ const parts=g.map((x,i)=>{
+   if(type==="LPF"){
+     return i%2===0
+       ? {type:"L",base:x*z/(2*Math.PI*fc),value:x*z/(2*Math.PI*fc)}
+       : {type:"C",base:x/(2*Math.PI*fc*z),value:x/(2*Math.PI*fc*z)};
+   }else{
+     return i%2===0
+       ? {type:"C",base:1/(2*Math.PI*fc*z*x),value:1/(2*Math.PI*fc*z*x)}
+       : {type:"L",base:z/(2*Math.PI*fc*x),value:z/(2*Math.PI*fc*x)};
+   }
+ });
+ return {type,z,pbStart,pbEnd,sbStart,sbEnd,n,fc,g,parts};
+}
+function filterReset(){
+ const d=filterDesign();
+ filterParts=d.parts.map(x=>({...x}));
+ filterRender(d);
+}
+function filterRender(d){
+ document.getElementById("filterOrderResult").textContent=d.n;
+ document.getElementById("filterFcResult").textContent=(d.fc/1e6).toFixed(3)+" MHz";
+ document.getElementById("filterComponents").innerHTML=filterParts.map((c,i)=>{
+   const unit=c.type==="L"?"nH":"pF";
+   const v=c.value*(c.type==="L"?1e9:1e12);
+   return `<div class="card">
+    <div class="label">Element ${i+1} · ${c.type}</div>
+    <div class="value">${v.toFixed(2)} ${unit}</div>
+    <input type="range" min="-100" max="100" value="0" step="1" oninput="filterTune(${i},this.value)">
+    <div class="small">每格 ${c.type==="L"?"1 nH":"1 pF"}</div>
+   </div>`;
+ }).join("");
+ filterDraw(d);
+}
+function filterTune(i,delta){
+ const d=filterDesign();
+ const step=d.parts[i].type==="L"?1e-9:1e-12;
+ filterParts[i].value=d.parts[i].base+Number(delta)*step;
+ if(filterParts[i].value<=0)filterParts[i].value=step;
+ filterRender({...d,parts:filterParts});
+}
+function filterUpdate(){
+ const d=filterDesign();
+ if(filterParts.length!==d.parts.length)filterParts=d.parts.map(x=>({...x}));
+ else filterParts=filterParts.map((x,i)=>({...d.parts[i],value:x.type===d.parts[i].type?x.value:d.parts[i].value}));
+ filterRender({...d,parts:filterParts});
+}
+function filterDraw(d){
+ const c=document.getElementById("filterCanvas");
+ if(!c)return;
+ const r=c.getBoundingClientRect(),ratio=devicePixelRatio||1;
+ const W=Math.max(320,r.width*ratio),H=Math.max(240,r.height*ratio);
+ c.width=W;c.height=H;
+ const ctx=c.getContext("2d");
+ ctx.clearRect(0,0,W,H);
+ const l=48*ratio,t=18*ratio,rr=12*ratio,b=32*ratio,pw=W-l-rr,ph=H-t-b;
+ const fmin=Math.max(.1,d.pbStart*.5),fmax=Math.max(d.sbEnd*1.05,d.pbEnd*1.5);
+ const a=Math.log10(fmin),z=Math.log10(fmax);
+ ctx.font=(11*ratio)+"px sans-serif";ctx.fillStyle="#687386";
+ for(let db=0;db>=-100;db-=20){
+   const y=t+(-db/100)*ph;
+   ctx.strokeStyle="#d8e0ea";ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(l+pw,y);ctx.stroke();
+   ctx.fillText(db+" dB",4*ratio,y+4*ratio);
+ }
+ ctx.strokeStyle="#17365d";ctx.lineWidth=2*ratio;ctx.beginPath();
+ for(let i=0;i<300;i++){
+   const f=Math.pow(10,a+(z-a)*i/299);
+   let ratioF=d.type==="LPF"?f/d.fc:d.fc/f;
+   let mag=-10*Math.log10(1+Math.pow(ratioF,2*d.n));
+   let tuning=1;
+   d.parts.forEach((p,j)=>{
+     const base=d.parts[j].base;
+     if(p.type==="L")tuning*=Math.sqrt(base/p.value);
+     else tuning*=Math.sqrt(p.value/base);
+   });
+   mag=-10*Math.log10(1+Math.pow(ratioF*tuning,2*d.n));
+   mag=Math.max(-100,Math.min(0,mag));
+   const x=l+(Math.log10(f)-a)/(z-a)*pw;
+   const y=t+(-mag/100)*ph;
+   if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+ }
+ ctx.stroke();
+ ctx.setLineDash([5*ratio,4*ratio]);ctx.strokeStyle="#8a95a5";ctx.lineWidth=ratio;
+ [d.pbEnd,d.sbStart,d.sbEnd].forEach(f=>{
+   if(f<=fmin||f>=fmax)return;
+   const x=l+(Math.log10(f)-a)/(z-a)*pw;
+   ctx.beginPath();ctx.moveTo(x,t);ctx.lineTo(x,t+ph);ctx.stroke();
+   ctx.fillStyle="#687386";ctx.fillText(f+" MHz",x+3*ratio,t+12*ratio);
+ });
+ ctx.setLineDash([]);
+}
+
 function safe(v){
  return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 }
-
-// ===== Filter Simulator V8.0 =====
-const $=id=>document.getElementById(id);
-let activePath='LPF';
-let activeParts=[];
-let baseParts=[];
-let markerF=0; let responseRevision=0;
-
-function part(id,kind,role,value,enabled=true,extra=''){
-  return {id,kind,role,value,enabled,extra};
-}
-function cloneParts(a){return a.map(p=>({...p}));}
-
-// The topology below follows the user's supplied schematic.
-// LPF: series L / R sections, L||C sections, and shunt C sections.
-// HPF: series C sections, shunt series-L-C branches, and optional 0R/NL parts.
-const TOPO={
- LPF:[
-  part('L805','L','Series',180e-9,true),
-  part('R873','R','Series',0,true),
-  part('C853','C','Shunt',39e-12,true),
-  part('L806','L','Series',150e-9,true),
-  part('C830','C','Parallel with L806',10e-12,true),
-  part('C837','C','Shunt',30e-12,true),
-  part('L807','L','Series',120e-9,true),
-  part('C831','C','Parallel with L807',18e-12,true),
-  part('C838','C','Shunt',39e-12,true),
-  part('L808','L','Series',150e-9,true),
-  part('C832','C','Parallel with L808',1.5e-12,true),
-  part('C839','C','Shunt',27e-12,true),
-  part('L?','L','Series',33e-9,true,'Refdes in source image appears C852 but symbol/value are an inductor 33 nH; verify refdes'),
-  part('C840','C','Shunt NL/22p',22e-12,false,'DNP by default'),
-  part('R874','R','Series',0,true),
-  part('C834','C','Parallel with R874',15e-12,false,'DNP by default'),
-  part('C841','C','Shunt',1e-12,false,'NL by default')
- ],
- HPF:[
-  part('C842','C','Series',15e-12,true),
-  part('L812','L','Shunt series-LC',68e-9,true),
-  part('C847','C','Shunt series-LC',180e-12,true),
-  part('C843','C','Series',15e-12,true),
-  part('L813','L','Shunt series-LC',100e-9,true),
-  part('C848','C','Shunt series-LC',36e-12,true),
-  part('C844','C','Series',18e-12,true),
-  part('L814','L','Shunt series-LC',120e-9,true),
-  part('C849','C','Shunt series-LC',33e-12,true),
-  part('R875','R','Series',0,true),
-  part('L815','L','Shunt series-LC',390e-9,false,'NL by default'),
-  part('C850','C','Shunt series-LC',39e-12,false,'NL/39p by default'),
-  part('R876','R','Series',0,true),
-  part('L816','L','Shunt series-LC',1e-9,false,'NL by default'),
-  part('C851','C','Shunt series-LC',1e-12,false,'NL by default'),
-  part('R877','R','Series',0,true)
- ]
-};
-
-function loadPath(){
- activePath=$('path').value;
- activeParts=cloneParts(TOPO[activePath]);
- baseParts=cloneParts(activeParts);
- // Keep the user-entered specification values. Path is only LPF/HPF; it must not overwrite the limits.
- markerF=Math.max(0,+$('xStart').value||0);
- drawAll();
-}
-function fmt(p){
- if(p.kind==='L') return (p.value*1e9).toFixed(2)+' nH';
- if(p.kind==='C') return (p.value*1e12).toFixed(2)+' pF';
- if(p.kind==='R') return (p.value===0?'0 Ω':p.value.toFixed(2)+' Ω');
- return String(p.value);
-}
-function c(r=0,i=0){return {r,i}}
-function add(a,b){return {r:a.r+b.r,i:a.i+b.i}}
-function sub(a,b){return {r:a.r-b.r,i:a.i-b.i}}
-function mul(a,b){return {r:a.r*b.r-a.i*b.i,i:a.r*b.i+a.i*b.r}}
-function div(a,b){const q=b.r*b.r+b.i*b.i||1e-30;return {r:(a.r*b.r+a.i*b.i)/q,i:(a.i*b.r-a.r*b.i)/q}}
-function absz(a){return Math.hypot(a.r,a.i)}
-function zSeriesRLC(parts,f){
- const w=2*Math.PI*f;
- let z=c();
- for(const p of parts){
-   if(!p.enabled) continue;
-   if(p.kind==='R') z=add(z,c(p.value,0));
-   else if(p.kind==='L') z=add(z,c(0,w*p.value));
-   else if(p.kind==='C') z=add(z,c(0,-1/(w*p.value||1e-30)));
- }
- return z;
-}
-function zParallel(parts,f){
- const w=2*Math.PI*f;let y=c();
- for(const p of parts){
-   if(!p.enabled) continue;
-   let z;
-   if(p.kind==='R') z=c(p.value,0);
-   else if(p.kind==='L') z=c(0,w*p.value);
-   else z=c(0,-1/(w*p.value||1e-30));
-   y=add(y,div(c(1,0),z));
- }
- return div(c(1,0),y);
-}
-function zParallelLC(Lp,Cp,f){
- const w=2*Math.PI*f;
- let y=c();
- if(Lp?.enabled) y=add(y,div(c(1,0),c(0,w*Lp.value)));
- if(Cp?.enabled) y=add(y,div(c(1,0),c(0,-1/(w*Cp.value||1e-30))));
- return div(c(1,0),y);
-}
-function cascade(M,N){
- return {
-  A:add(mul(M.A,N.A),mul(M.B,N.C)),
-  B:add(mul(M.A,N.B),mul(M.B,N.D)),
-  C:add(mul(M.C,N.A),mul(M.D,N.C)),
-  D:add(mul(M.C,N.B),mul(M.D,N.D))
- };
-}
-function seriesM(Z){return {A:c(1),B:Z,C:c(),D:c(1)}}
-function shuntM(Y){return {A:c(1),B:c(),C:Y,D:c(1)}}
-function shuntZ(Z){return shuntM(div(c(1),Z))}
-function sectionCount(){return Math.max(1,Math.min(6,Math.round(+$('sectionCount').value||4)))}
-function buildLPF(f){
- const p=activeParts;const by=id=>p.find(x=>x.id===id);let M={A:c(1),B:c(),C:c(),D:c(1)};
- const addSeries=z=>{if(z)M=cascade(M,seriesM(z))}; const addShunt=z=>{if(z&&absz(z)>1e-18&&absz(z)<1e90)M=cascade(M,shuntZ(z))};
- const n=sectionCount();
- if(n>=1){addSeries(zSeriesRLC([by('L805'),by('R873')],f));addShunt(zParallel([by('C853')],f));}
- if(n>=2){addSeries(zParallelLC(by('L806'),by('C830'),f));addShunt(zParallel([by('C837')],f));}
- if(n>=3){addSeries(zParallelLC(by('L807'),by('C831'),f));addShunt(zParallel([by('C838')],f));}
- if(n>=4){addSeries(zParallelLC(by('L808'),by('C832'),f));addShunt(zParallel([by('C839')],f));}
- if(n>=5){addSeries(zSeriesRLC([by('L?')],f));addShunt(zParallel([by('C840')],f));}
- if(n>=6){addSeries(zSeriesRLC([by('R874'),by('C834')],f));addShunt(zParallel([by('C841')],f));}
- return M;
-}
-function buildHPF(f){
- const p=activeParts;const by=id=>p.find(x=>x.id===id);let M={A:c(1),B:c(),C:c(),D:c(1)};
- const addSeries=z=>{if(z)M=cascade(M,seriesM(z))}; const addShunt=z=>{if(z&&absz(z)>1e-18&&absz(z)<1e90)M=cascade(M,shuntZ(z))};
- const n=sectionCount();
- if(n>=1){addSeries(zSeriesRLC([by('C842')],f));addShunt(zSeriesRLC([by('L812'),by('C847')],f));}
- if(n>=2){addSeries(zSeriesRLC([by('C843')],f));addShunt(zSeriesRLC([by('L813'),by('C848')],f));}
- if(n>=3){addSeries(zSeriesRLC([by('C844')],f));addShunt(zSeriesRLC([by('L814'),by('C849')],f));}
- if(n>=4){addSeries(zSeriesRLC([by('R875')],f));addShunt(zSeriesRLC([by('L815'),by('C850')],f));}
- if(n>=5){addSeries(zSeriesRLC([by('R876')],f));addShunt(zSeriesRLC([by('L816'),by('C851')],f));}
- if(n>=6){addSeries(zSeriesRLC([by('R877')],f));}
- return M;
-}
-function networkS(f){
- const M=activePath==='LPF'?buildLPF(f):buildHPF(f);
- const z1=Math.max(.1,+$('zPort1').value||75),z2=Math.max(.1,+$('zPort2').value||75);
- const den=add(add(M.A,div(M.B,c(z2)),),add(mul(M.C,c(z1)),M.D));
- const s21=div(c(2*Math.sqrt(z1/z2),0),den);
- const num=sub(add(M.A,div(M.B,c(z2))),add(mul(M.C,c(z1)),M.D));
- const s11=div(num,den);
- return {s21,s11};
-}
-function db(v){return 20*Math.log10(Math.max(1e-12,absz(v)))}
-function drawSchematic(){
- const el=$('schematic'),p=activeParts,n=sectionCount();const w=Math.max(900,180+n*150),h=activePath==='LPF'?270:300,y=92,left=45,step=(w-110)/Math.max(1,n);let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><style>.w{stroke:#294a70;stroke-width:3;fill:none}.e{stroke:#17365d;stroke-width:2.5;fill:#eef5ff}.t{font:700 13px -apple-system,BlinkMacSystemFont,sans-serif;fill:#172033}.g{stroke:#555;stroke-width:2}.port{font:800 14px sans-serif;fill:#172033}.mut{opacity:.35}</style>`;
- svg+=`<line class="w" x1="15" y1="${y}" x2="${left}" y2="${y}"/><text class="port" x="10" y="${y-18}">P1 ${$('zPort1').value}Ω</text>`;
- const branch=(x,label,shLabel)=>{svg+=`<line class="w" x1="${x}" y1="${y}" x2="${x}" y2="${y+34}"/><rect class="e" x="${x-18}" y="${y+34}" width="36" height="20" rx="4"/><line class="w" x1="${x}" y1="${y+54}" x2="${x}" y2="${y+70}"/><line class="g" x1="${x-14}" y1="${y+70}" x2="${x+14}" y2="${y+70}"/><line class="g" x1="${x-9}" y1="${y+76}" x2="${x+9}" y2="${y+76}"/><text class="t" x="${x-18}" y="${y+27}">${shLabel}</text>`};
- if(activePath==='LPF'){
-   const blocks=[['L805','C853'],['L806∥C830','C837'],['L807∥C831','C838'],['L808∥C832','C839'],['L?','C840'],['R874∥C834','C841']];
-   blocks.slice(0,n).forEach((b,i)=>{const x=left+i*step+45;const next=left+(i+1)*step+45;svg+=`<line class="w" x1="${i?left+(i)*step+5:left}" y1="${y}" x2="${x-35}" y2="${y}"/>`;if(i<4){svg+=`<path class="w" d="M${x-35} ${y} q8 -18 16 0 q8 18 16 0 q8 -18 16 0"/>`;}else{svg+=`<rect class="e" x="${x-35}" y="${y-10}" width="70" height="20" rx="4"/>`;}svg+=`<line class="w" x1="${x+35}" y1="${y}" x2="${next}" y2="${y}"/><text class="t" x="${x-33}" y="${y-25}">${b[0]}</text>`;branch(x+35,b[0],b[1]);if(i===1||i===2||i===3){const cx=x;svg+=`<line class="w" x1="${cx-25}" y1="${y-3}" x2="${cx-25}" y2="${y-46}"/><line class="w" x1="${cx-25}" y1="${y-46}" x2="${cx+25}" y2="${y-46}"/><line class="w" x1="${cx+25}" y1="${y-46}" x2="${cx+25}" y2="${y-3}"/><rect class="e" x="${cx-14}" y="${y-58}" width="28" height="18" rx="3"/><text class="t" x="${cx-20}" y="${y-65}">${b[0].split('∥')[1]||''}</text>`;}});
-   svg+=`<text class="port" x="${w-100}" y="${y-18}">P2 ${$('zPort2').value}Ω</text>`;
- }else{
-   const blocks=[['C842','L812+C847'],['C843','L813+C848'],['C844','L814+C849'],['R875','L815+C850'],['R876','L816+C851'],['R877','—']];
-   blocks.slice(0,n).forEach((b,i)=>{const x=left+i*step+45;const next=left+(i+1)*step+45;svg+=`<line class="w" x1="${i?left+i*step+5:left}" y1="${y}" x2="${x-30}" y2="${y}"/><rect class="e" x="${x-30}" y="${y-10}" width="60" height="20" rx="4"/><line class="w" x1="${x+30}" y1="${y}" x2="${next}" y2="${y}"/><text class="t" x="${x-24}" y="${y-25}">${b[0]}</text>`;if(b[1]!=='—'){const cx=x+30;svg+=`<line class="w" x1="${cx}" y1="${y}" x2="${cx}" y2="${y+28}"/><path class="w" d="M${cx} ${y+28} q-14 8 0 16 q14 8 0 16 q-14 8 0 16"/><rect class="e" x="${cx-14}" y="${y+82}" width="28" height="18" rx="3"/><line class="w" x1="${cx}" y1="${y+100}" x2="${cx}" y2="${y+115}"/><line class="g" x1="${cx-14}" y1="${y+115}" x2="${cx+14}" y2="${y+115}"/><text class="t" x="${cx-22}" y="${y+26}">${b[1]}</text>`;}});
-   svg+=`<text class="port" x="${w-115}" y="${y-18}">P2 ${$('zPort2').value}Ω</text>`;
- }
- svg+=`</svg>`;el.innerHTML=svg;$('topologyNote').textContent=`${activePath} · Active sections: ${n}. Only the selected number of sections are included in S11/S21 and Manual Tune.`;
-}
-function byIdEnabled(p,id){const q=p.find(x=>x.id===id);return !!(q&&q.enabled)}
-function activeTuneIds(){
- const n=sectionCount();
- if(activePath==='LPF'){
-  const groups=[['L805','C853'],['L806','C830','C837'],['L807','C831','C838'],['L808','C832','C839'],['L?','C840'],['R874','C834','C841']];
-  return groups.slice(0,n).flat();
- }
- const groups=[['C842','L812','C847'],['C843','L813','C848'],['C844','L814','C849'],['R875','L815','C850'],['R876','L816','C851'],['R877']];
- return groups.slice(0,n).flat();
-}
-function drawTuning(){
- const el=$('tuning');el.innerHTML='';const ids=new Set(activeTuneIds());activeParts.filter(p=>ids.has(p.id)&&p.kind!=='R').forEach(p=>{
-  const row=document.createElement('div');row.className='tuning';
-  const label=document.createElement('div');label.innerHTML=`<b>${p.id}</b><div class="small">${p.role}${p.enabled?'':' · DNP/NL'}</div><div class="holdHint">長按可快速調整</div>`;
-  const minus=document.createElement('button');minus.className='minus';minus.textContent='−';
-  const val=document.createElement('div');val.className='value';val.textContent=fmt(p);
-  const plus=document.createElement('button');plus.className='plus';plus.textContent='+';
-  const step=p.kind==='L'?1e-9:1e-12;
-  let timer=null,repeat=0;
-  const change=(dir)=>{const mult=repeat<8?1:repeat<18?5:repeat<35?20:100;p.value=Math.max(p.kind==='L'?1e-12:1e-15,p.value+dir*step*mult);p.enabled=true;drawAll()};
-  const start=(dir,e)=>{e.preventDefault();repeat=0;change(dir);clearInterval(timer);timer=setInterval(()=>{repeat++;change(dir)},90)};
-  const stop=()=>{if(timer){clearInterval(timer);timer=null}};
-  minus.addEventListener('pointerdown',e=>start(-1,e));plus.addEventListener('pointerdown',e=>start(1,e));['pointerup','pointercancel','pointerleave'].forEach(ev=>{minus.addEventListener(ev,stop);plus.addEventListener(ev,stop)});
-  val.onclick=()=>{p.enabled=!p.enabled;drawAll()};row.append(label,minus,val,plus);el.appendChild(row);
- });
- const hint=document.createElement('div');hint.className='small';hint.style.marginTop='10px';hint.textContent='長按 ± 會逐段加速：1× → 5× → 20× → 100×；放開立即停止。';el.appendChild(hint);
-}
-function drawValues(){const ids=new Set(activeTuneIds());$('values').innerHTML=activeParts.filter(p=>ids.has(p.id)).map(p=>`${p.id}: <b>${fmt(p)}</b> · ${p.role} · ${p.enabled?'ON':'OFF'}`).join('<br>')}
-function butterworthOrder(fp,fs,Ap,As){if(activePath==='HPF'){[fp,fs]=[fs,fp]}if(fs<=fp)return 2;if(Ap<=0)return Math.max(2,Math.ceil(Math.log10(10**(As/10)-1)/(2*Math.log10(fs/fp))));return Math.max(2,Math.ceil(Math.log10((10**(As/10)-1)/(10**(Ap/10)-1))/(2*Math.log10(fs/fp))))}
-function autoCalculate(){
- const fp=(+$('pbEnd').value||85)*1e6,fs=(+$('sbStart').value||108)*1e6,Ap=+$('rippleDb').value||0,As=+$('rejectionDb').value||40;
- const n=butterworthOrder(fp,fs,Ap,As);
- $('sectionCount').value=Math.min(6,n);
- // For the real, non-canonical topology we deliberately do not overwrite the BOM with a
- // fictitious ladder synthesis. Instead Auto Calculate brings out the reference order and
- // keeps the measured/schematic component values intact. This is the safe first-stage Auto function.
- $('autoStatus').textContent=`Auto reference order ≈ ${n}. Real ${activePath} topology loaded; schematic/BOM values preserved. Next stage can optimize these real components to the entered limits.`;
- drawAll();
-}
-function drawChart(){
- responseRevision++;
- const c=$('chart'),dpr=devicePixelRatio||1,W=c.clientWidth||700,H=c.clientHeight||300;c.width=W*dpr;c.height=H*dpr;const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
- const L=52,R=12,T=18,B=38,pw=W-L-R,ph=H-T-B;let fmin=Math.max(0,+$('xStart').value||0),fmax=Math.max(fmin+.001,+$('xStop').value||1218);let yTop=+$('yTop').value,yBot=+$('yBottom').value;if(yTop<=yBot)yTop=yBot+10;
- const pb0=+$('pbStart').value,pb1=+$('pbEnd').value,sb0=+$('sbStart').value,sb1=+$('sbEnd').value;const fx=f=>L+(f-fmin)/(fmax-fmin)*pw,fy=v=>T+(yTop-Math.max(yBot,Math.min(yTop,v)))/(yTop-yBot)*ph;
- ctx.strokeStyle='#dbe1e9';ctx.lineWidth=1;for(let i=0;i<=4;i++){let y=T+ph*i/4;ctx.beginPath();ctx.moveTo(L,y);ctx.lineTo(W-R,y);ctx.stroke();ctx.fillStyle='#68758a';ctx.font='11px sans-serif';ctx.fillText((yTop+(yBot-yTop)*i/4).toFixed(0)+' dB',5,y+4)}
- [pb0,pb1,sb0,sb1].filter(f=>f>=fmin&&f<=fmax).forEach(f=>{let x=fx(f);ctx.setLineDash([5,5]);ctx.strokeStyle='#aab5c3';ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,T+ph);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#59677b';ctx.font='11px sans-serif';ctx.fillText(f+'M',Math.max(L,x-12),H-12)});
- const xpb0=fx(pb0),xpb1=fx(pb1),xsb0=fx(sb0),xsb1=fx(sb1);if(pb1>fmin&&pb0<fmax){ctx.fillStyle='#eaf5ea';ctx.fillRect(Math.max(L,xpb0),T,Math.max(0,xpb1-xpb0),ph)}if(sb1>fmin&&sb0<fmax){ctx.fillStyle='#fff0f0';ctx.fillRect(Math.max(L,xsb0),T,Math.max(0,xsb1-xsb0),ph)}
- const drawCurve=which=>{ctx.beginPath();ctx.lineWidth=2.5;ctx.strokeStyle=which==='S21'?'#1769aa':'#d14b3f';for(let i=0;i<=1600;i++){const f=fmin+(fmax-fmin)*i/1600,v=db(networkS(Math.max(1,f))[which.toLowerCase()]),x=fx(f),y=fy(v);if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke()};
- if($('showS21').checked)drawCurve('S21');if($('showS11').checked)drawCurve('S11');
- const active=$('showS21').checked?'S21':($('showS11').checked?'S11':null);const mf=Math.max(fmin,Math.min(fmax,markerF));if(active){const mdb=db(networkS(Math.max(1,mf))[active.toLowerCase()]),mx=fx(mf),my=fy(mdb);ctx.setLineDash([4,4]);ctx.strokeStyle=active==='S21'?'#1769aa':'#d14b3f';ctx.beginPath();ctx.moveTo(mx,T);ctx.lineTo(mx,T+ph);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=active==='S21'?'#1769aa':'#d14b3f';ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);ctx.fill();$('markerLabel').textContent='Marker '+active;$('markerDb').textContent=mdb.toFixed(2)+' dB'}
- $('markerFreq').textContent=mf.toFixed(3)+' MHz';$('chartInfo').textContent=`${activePath} · ${sectionCount()} sections · X ${fmin}–${fmax} MHz · Y ${yBot}–${yTop} dB · P1 ${$('zPort1').value}Ω · P2 ${$('zPort2').value}Ω · Update #${responseRevision}`;
-}
-function drawAll(){const pb0=+$('pbStart').value,pb1=+$('pbEnd').value,sb0=+$('sbStart').value,sb1=+$('sbEnd').value;$('pbText').textContent=`${pb0}–${pb1} MHz`;$('sbText').textContent=`${sb0}–${sb1} MHz`;$('rejText').textContent=(+$('rejectionDb').value||0)+' dB';drawSchematic();drawTuning();drawChart();drawValues()}
-$('path').addEventListener('change',loadPath);
-$('autoCalc').addEventListener('click',autoCalculate);
-$('resetTopology').addEventListener('click',()=>{activeParts=cloneParts(baseParts);drawAll()});
-['zPort1','zPort2','pbStart','pbEnd','sbStart','sbEnd','rippleDb','rejectionDb','sectionCount'].forEach(id=>$(id).addEventListener('input',drawAll));
-['xStart','xStop','yTop','yBottom'].forEach(id=>$(id).addEventListener('input',drawAll));
-['showS21','showS11'].forEach(id=>$(id).addEventListener('change',drawChart));
-$('chart').addEventListener('pointerdown',e=>{const rect=$('chart').getBoundingClientRect();const L=52,R=12;const x=Math.max(L,Math.min(rect.width-R,e.clientX-rect.left));const fmin=Math.max(0,+$('xStart').value||0),fmax=Math.max(fmin+.001,+$('xStop').value||1218);markerF=fmin+(x-L)/(rect.width-L-R)*(fmax-fmin);$('chart').setPointerCapture(e.pointerId);drawChart()});
-$('chart').addEventListener('pointermove',e=>{if(!e.buttons)return;const rect=$('chart').getBoundingClientRect();const L=52,R=12;const x=Math.max(L,Math.min(rect.width-R,e.clientX-rect.left));const fmin=Math.max(0,+$('xStart').value||0),fmax=Math.max(fmin+.001,+$('xStop').value||1218);markerF=fmin+(x-L)/(rect.width-L-R)*(fmax-fmin);drawChart()});
-new ResizeObserver(drawAll).observe(document.body);
-loadPath();
 </script>
 </body>
 </html>
