@@ -40,6 +40,14 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
 .partResult:hover{background:#f5f8fc}
 .small{font-size:13px;color:#687386}
 @media(max-width:600px){.menuGrid,.comboGrid{grid-template-columns:1fr}}
+
+.filterGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.filterGrid label{font-size:13px;color:#687386;font-weight:700}
+.filterGrid input,.filterGrid select{margin-top:5px}
+.filterNote{font-size:12px;color:#687386;line-height:1.6}
+#filterCanvas{width:100%;height:300px;border:1px solid #d8e0ea;border-radius:12px;background:#fff}
+.filterStat{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+@media(max-width:600px){.filterGrid,.filterStat{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -62,6 +70,7 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
    <div class="menuGrid">
     <button class="menuBtn" onclick="showProduct()"><span>📦</span>產品查詢</button>
     <button class="menuBtn" onclick="showPart()"><span>🏷️</span>料號查詢</button>
+     <button class="menuBtn" onclick="showFilter()"><span>📡</span>Filter Simulation</button>
    </div>
   </div>
  </div>
@@ -85,6 +94,46 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
  </div>
 </div>
 </div>
+
+ <div id="filterPage" class="hidden">
+  <button class="back" onclick="goHome()">← 回首頁</button>
+  <div class="panel">
+   <h2>📡 Filter Simulation</h2>
+   <div class="filterNote">
+    工程用理想 LC Filter 模擬。可設定 Passband / Stopband、Z0、Filter Order，
+    並以 1 pF / 1 nH 步進即時微調元件。
+   </div>
+   <div class="filterGrid">
+    <div><label>Filter Type</label><select id="filterType" onchange="filterUpdate()"><option>LPF</option><option>HPF</option></select></div>
+    <div><label>Filter Order</label><select id="filterOrder" onchange="filterUpdate()"><option value="auto">Auto Calculate</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
+    <div><label>Z0 (Ω)</label><input id="filterZ0" type="number" value="75" step="1" oninput="filterUpdate()"></div>
+    <div><label>Stopband Attenuation (dB)</label><input id="filterAtt" type="number" value="40" step="1" oninput="filterUpdate()"></div>
+    <div><label>Passband Start (MHz)</label><input id="filterPBStart" type="number" value="5" step="1" oninput="filterUpdate()"></div>
+    <div><label>Passband End (MHz)</label><input id="filterPBEnd" type="number" value="85" step="1" oninput="filterUpdate()"></div>
+    <div><label>Stopband Start (MHz)</label><input id="filterSBStart" type="number" value="108" step="1" oninput="filterUpdate()"></div>
+    <div><label>Stopband End (MHz)</label><input id="filterSBEnd" type="number" value="1218" step="1" oninput="filterUpdate()"></div>
+   </div>
+  </div>
+  <div class="panel">
+   <h3>📈 S21 / Insertion Loss</h3>
+   <canvas id="filterCanvas"></canvas>
+   <div class="filterStat">
+    <div class="card"><div class="label">Calculated Order</div><div id="filterOrderResult" class="value">-</div></div>
+    <div class="card"><div class="label">Cutoff / Fc</div><div id="filterFcResult" class="value">-</div></div>
+   </div>
+  </div>
+  <div class="panel">
+   <h3>🔧 Component Tuning</h3>
+   <div id="filterComponents"></div>
+   <button onclick="filterReset()">↩️ Reset Components</button>
+  </div>
+  <div class="panel filterNote">
+   目前為理想 LC prototype；尚未加入實際 Q、ESR、SRF、PCB/package parasitic 與實測 S-parameter，
+   因此先用於架構與規格驗證，不作為量產 RF sign-off。
+  </div>
+ </div>
+</div>
+
 <script src="data.js?v=3"></script>
 <script src="parts.js?v=3"></script>
 <script>
@@ -106,6 +155,7 @@ function hidePages(){
  document.getElementById("home").classList.add("hidden");
  document.getElementById("productPage").classList.add("hidden");
  document.getElementById("partPage").classList.add("hidden");
+ document.getElementById("filterPage").classList.add("hidden");
 }
 function goHome(){
  hidePages();
@@ -121,6 +171,11 @@ function showPart(){
  hidePages();
  document.getElementById("partPage").classList.remove("hidden");
  document.getElementById("partSearch").focus();
+}
+function showFilter(){
+ hidePages();
+ document.getElementById("filterPage").classList.remove("hidden");
+ filterReset();
 }
 function loadModels(){
  const select=document.getElementById("modelSelect");
@@ -211,6 +266,131 @@ function showPartDetail(p){
   '<button class="back" onclick="runPartSearch()">← 回搜尋結果</button>'+
   fields.map(k=>`<div class="card"><div class="label">${safe(k)}</div><div class="value">${safe(p[k]||"-")}</div></div>`).join("");
 }
+
+// ===== Filter Simulation =====
+const FILTER_G={
+2:[1.41421356,1.41421356],
+3:[1,2,1],
+4:[0.76536686,1.84775907,1.84775907,0.76536686],
+5:[0.61803399,1.61803399,2,1.61803399,0.61803399],
+6:[0.51763809,1.41421356,1.93185165,1.93185165,1.41421356,0.51763809],
+7:[0.44504187,1.2469796,1.80193774,2,1.80193774,1.2469796,0.44504187],
+8:[0.39018064,1.11114047,1.96157056,1.66293922,1.66293922,1.96157056,1.11114047,0.39018064],
+9:[0.34729636,0.99999999,1.53208889,1.87938524,2,1.87938524,1.53208889,0.99999999,0.34729636],
+10:[0.31286893,0.90798099,1.97537668,1.78201305,1.61803399,1.78201305,1.97537668,0.90798099,0.31286893]
+};
+let filterParts=[];
+
+function filterOrderAuto(){
+ const pb=Number(document.getElementById("filterPBEnd").value)||85;
+ const sb=Number(document.getElementById("filterSBStart").value)||108;
+ const att=Number(document.getElementById("filterAtt").value)||40;
+ const ratio=sb/pb;
+ const n=Math.ceil(Math.log10(Math.pow(10,att/10)-1)/(2*Math.log10(ratio)));
+ return Math.max(2,Math.min(10,n));
+}
+function filterDesign(){
+ const type=document.getElementById("filterType").value;
+ const z=Number(document.getElementById("filterZ0").value)||75;
+ const pbStart=Number(document.getElementById("filterPBStart").value)||5;
+ const pbEnd=Number(document.getElementById("filterPBEnd").value)||85;
+ const sbStart=Number(document.getElementById("filterSBStart").value)||108;
+ const sbEnd=Number(document.getElementById("filterSBEnd").value)||1218;
+ const sel=document.getElementById("filterOrder").value;
+ const n=sel==="auto"?filterOrderAuto():Number(sel);
+ const fc=(type==="LPF"?pbEnd:pbStart)*1e6;
+ const g=FILTER_G[n];
+ const parts=g.map((x,i)=>{
+   if(type==="LPF"){
+     return i%2===0
+       ? {type:"L",base:x*z/(2*Math.PI*fc),value:x*z/(2*Math.PI*fc)}
+       : {type:"C",base:x/(2*Math.PI*fc*z),value:x/(2*Math.PI*fc*z)};
+   }else{
+     return i%2===0
+       ? {type:"C",base:1/(2*Math.PI*fc*z*x),value:1/(2*Math.PI*fc*z*x)}
+       : {type:"L",base:z/(2*Math.PI*fc*x),value:z/(2*Math.PI*fc*x)};
+   }
+ });
+ return {type,z,pbStart,pbEnd,sbStart,sbEnd,n,fc,g,parts};
+}
+function filterReset(){
+ const d=filterDesign();
+ filterParts=d.parts.map(x=>({...x}));
+ filterRender(d);
+}
+function filterRender(d){
+ document.getElementById("filterOrderResult").textContent=d.n;
+ document.getElementById("filterFcResult").textContent=(d.fc/1e6).toFixed(3)+" MHz";
+ document.getElementById("filterComponents").innerHTML=filterParts.map((c,i)=>{
+   const unit=c.type==="L"?"nH":"pF";
+   const v=c.value*(c.type==="L"?1e9:1e12);
+   return `<div class="card">
+    <div class="label">Element ${i+1} · ${c.type}</div>
+    <div class="value">${v.toFixed(2)} ${unit}</div>
+    <input type="range" min="-100" max="100" value="0" step="1" oninput="filterTune(${i},this.value)">
+    <div class="small">每格 ${c.type==="L"?"1 nH":"1 pF"}</div>
+   </div>`;
+ }).join("");
+ filterDraw(d);
+}
+function filterTune(i,delta){
+ const d=filterDesign();
+ const step=d.parts[i].type==="L"?1e-9:1e-12;
+ filterParts[i].value=d.parts[i].base+Number(delta)*step;
+ if(filterParts[i].value<=0)filterParts[i].value=step;
+ filterRender({...d,parts:filterParts});
+}
+function filterUpdate(){
+ const d=filterDesign();
+ if(filterParts.length!==d.parts.length)filterParts=d.parts.map(x=>({...x}));
+ else filterParts=filterParts.map((x,i)=>({...d.parts[i],value:x.type===d.parts[i].type?x.value:d.parts[i].value}));
+ filterRender({...d,parts:filterParts});
+}
+function filterDraw(d){
+ const c=document.getElementById("filterCanvas");
+ if(!c)return;
+ const r=c.getBoundingClientRect(),ratio=devicePixelRatio||1;
+ const W=Math.max(320,r.width*ratio),H=Math.max(240,r.height*ratio);
+ c.width=W;c.height=H;
+ const ctx=c.getContext("2d");
+ ctx.clearRect(0,0,W,H);
+ const l=48*ratio,t=18*ratio,rr=12*ratio,b=32*ratio,pw=W-l-rr,ph=H-t-b;
+ const fmin=Math.max(.1,d.pbStart*.5),fmax=Math.max(d.sbEnd*1.05,d.pbEnd*1.5);
+ const a=Math.log10(fmin),z=Math.log10(fmax);
+ ctx.font=(11*ratio)+"px sans-serif";ctx.fillStyle="#687386";
+ for(let db=0;db>=-100;db-=20){
+   const y=t+(-db/100)*ph;
+   ctx.strokeStyle="#d8e0ea";ctx.beginPath();ctx.moveTo(l,y);ctx.lineTo(l+pw,y);ctx.stroke();
+   ctx.fillText(db+" dB",4*ratio,y+4*ratio);
+ }
+ ctx.strokeStyle="#17365d";ctx.lineWidth=2*ratio;ctx.beginPath();
+ for(let i=0;i<300;i++){
+   const f=Math.pow(10,a+(z-a)*i/299);
+   let ratioF=d.type==="LPF"?f/d.fc:d.fc/f;
+   let mag=-10*Math.log10(1+Math.pow(ratioF,2*d.n));
+   let tuning=1;
+   d.parts.forEach((p,j)=>{
+     const base=d.parts[j].base;
+     if(p.type==="L")tuning*=Math.sqrt(base/p.value);
+     else tuning*=Math.sqrt(p.value/base);
+   });
+   mag=-10*Math.log10(1+Math.pow(ratioF*tuning,2*d.n));
+   mag=Math.max(-100,Math.min(0,mag));
+   const x=l+(Math.log10(f)-a)/(z-a)*pw;
+   const y=t+(-mag/100)*ph;
+   if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+ }
+ ctx.stroke();
+ ctx.setLineDash([5*ratio,4*ratio]);ctx.strokeStyle="#8a95a5";ctx.lineWidth=ratio;
+ [d.pbEnd,d.sbStart,d.sbEnd].forEach(f=>{
+   if(f<=fmin||f>=fmax)return;
+   const x=l+(Math.log10(f)-a)/(z-a)*pw;
+   ctx.beginPath();ctx.moveTo(x,t);ctx.lineTo(x,t+ph);ctx.stroke();
+   ctx.fillStyle="#687386";ctx.fillText(f+" MHz",x+3*ratio,t+12*ratio);
+ });
+ ctx.setLineDash([]);
+}
+
 function safe(v){
  return String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 }
