@@ -43,7 +43,6 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
 </style>
 </head>
 <body>
-
 <div id="loginPage" class="login">
  <div class="loginBox">
   <h1>🔐 Hardware Query</h1>
@@ -54,7 +53,6 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
   <div id="loginError" class="error"></div>
  </div>
 </div>
-
 <div id="mainPage" class="hidden">
 <header>🔧 Hardware Query</header>
 <div class="container">
@@ -67,7 +65,6 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
    </div>
   </div>
  </div>
-
  <div id="productPage" class="hidden">
   <button class="back" onclick="goHome()">← 回首頁</button>
   <div class="panel">
@@ -77,7 +74,6 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
   </div>
   <div id="productResult"></div>
  </div>
-
  <div id="partPage" class="hidden">
   <button class="back" onclick="goHome()">← 回首頁</button>
   <div class="panel">
@@ -89,15 +85,13 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
  </div>
 </div>
 </div>
-
 <script src="data.js?v=3"></script>
 <script src="parts.js?v=3"></script>
 <script>
 const PASSWORD="-demo";
-let models=(typeof _DATA!=="undefined" && Array.isArray(_DATA))?_DATA:[];
+let models=(typeof HITRON_DATA!=="undefined" && Array.isArray(HITRON_DATA))?HITRON_DATA:[];
 let parts=(typeof PARTS_DATA!=="undefined" && Array.isArray(PARTS_DATA))?PARTS_DATA:[];
 let partTimer=null;
-
 function login(){
  const pw=document.getElementById("password").value;
  if(pw===PASSWORD){
@@ -108,7 +102,6 @@ function login(){
   document.getElementById("loginError").textContent="❌ 密碼錯誤";
  }
 }
-
 function hidePages(){
  document.getElementById("home").classList.add("hidden");
  document.getElementById("productPage").classList.add("hidden");
@@ -129,7 +122,6 @@ function showPart(){
  document.getElementById("partPage").classList.remove("hidden");
  document.getElementById("partSearch").focus();
 }
-
 function loadModels(){
  const select=document.getElementById("modelSelect");
  select.innerHTML='<option value="">請選擇 Model</option>';
@@ -152,7 +144,6 @@ function showModel(){
  if(i===""){document.getElementById("productResult").innerHTML="";return}
  renderProduct(models[i]);
 }
-
 function category(key){
  const k=key.toLowerCase();
  if(k.includes("product")||k==="model")return"model";
@@ -176,7 +167,7 @@ function hardwareCombo(data){
   ["LAN",Object.entries(data).filter(([k])=>/lan|ethernet/i.test(k)).map(([,v])=>v).filter(Boolean).join(" / ")||"-"],
   ["VOICE",findValue(data,["voice","fxs"])]
  ];
- return '<div class="combo"><h2>🔧 Hardware 組合</h2><div class="comboGrid">'+items.map(x=>`<div class="comboItem"><div class="comboLabel">${x[0]}</div><div class="comboValue">${safe(x[1])}</div></div>`).join("")+'</div></div>';
+ return '<div class="combo"><h2>🔧 Hardware 組合</h2><div class="comboGrid">'+items.map(x=>`<div class="comboItem"><div class="comboLabel">${safe(x[0])}</div><div class="comboValue">${safe(x[1])}</div></div>`).join("")+'</div></div>';
 }
 function renderProduct(data){
  const groups={model:[],processing:[],rf:[],connectivity:[],other:[]};
@@ -191,7 +182,6 @@ function renderProduct(data){
  });
  document.getElementById("productResult").innerHTML=html;
 }
-
 function searchPart(){
  clearTimeout(partTimer);
  partTimer=setTimeout(runPartSearch,120);
