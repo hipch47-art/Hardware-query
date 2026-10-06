@@ -92,14 +92,15 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
  </div>
 </div>
 <div id="filterPage" class="hidden filterPage">
-<header>📡 Filter Simulation V7.5</header>
+<header>📡 Filter Simulation V7.8</header>
 <div style="padding:12px 12px 0"><button class="back" onclick="goHome()">← 回首頁</button></div>
 <main>
 <section class="card">
 <h2>Filter Specification</h2>
 <div class="grid">
 <div><label>Type</label><select id="type"><option>LPF</option><option>HPF</option></select></div>
-<div><label>Z0 (Ω)</label><input id="z0" type="number" value="75" min="1"></div>
+<div><label>Port 1 Z (Ω)</label><input id="zPort1" type="number" value="75" min="0.1" step="0.1"></div>
+<div><label>Port 2 Z (Ω)</label><input id="zPort2" type="number" value="75" min="0.1" step="0.1"></div>
 <div><label>Order</label><select id="order"><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
 </div>
 <div class="grid" style="margin-top:12px">
@@ -122,7 +123,7 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
 <section class="card">
 <h2>🔌 LC Circuit Topology <span class="badge">click a component</span></h2>
 <div id="schematic"></div>
-<div class="small">元件編號直接對應下方微調。LPF 採交替 Series-L / Shunt-C ladder；本版先提供 Butterworth 標準 ladder。</div>
+<div class="small">元件編號直接對應下方微調。LPF 採交替 Series-L / Shunt-C ladder；P1/P2 為獨立參考阻抗。</div>
 </section>
 
 <section class="card">
@@ -317,12 +318,12 @@ const g = {
 const $=id=>document.getElementById(id);
 let filterParts=[], filterBase=[];
 function calcBase(){
-  const n=+$('order').value, z=+$('z0').value, f=+$('pbEnd').value*1e6, gg=g[n];
+  const n=+$('order').value, z1=+$('zPort1').value, z2=+$('zPort2').value, f=+$('pbEnd').value*1e6, gg=g[n];
   filterParts=[];
   gg.forEach((gv,i)=>{
     const odd=i%2===0;
-    if(odd) filterParts.push({id:"L"+(i+1),kind:"L",role:"Series",value:gv*z/(2*Math.PI*f)});
-    else filterParts.push({id:"C"+(i+1),kind:"C",role:"Shunt",value:gv/(2*Math.PI*f*z)});
+    if(odd) filterParts.push({id:"L"+(i+1),kind:"L",role:"Series",value:gv*z1/(2*Math.PI*f)});
+    else filterParts.push({id:"C"+(i+1),kind:"C",role:"Shunt",value:gv/(2*Math.PI*f*z1)});
   });
   filterBase=filterParts.map(p=>({...p,value:p.value}));
   drawAll();
@@ -331,31 +332,37 @@ function fmt(p){
   return p.kind==="L" ? (p.value*1e9).toFixed(2)+" nH" : (p.value*1e12).toFixed(2)+" pF";
 }
 function drawSchematic(){
-  const el=$('schematic'), w=el.clientWidth||700,h=180;
-  let x=35, y=85, gap=Math.max(80,(w-70)/(filterParts.length+1));
-  let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
-  <style>.wire{stroke:#294a70;stroke-width:3;fill:none}.part{stroke:#17365d;stroke-width:3;fill:#eef5ff}.txt{font:700 13px -apple-system,BlinkMacSystemFont,sans-serif;fill:#172033}.gnd{stroke:#555;stroke-width:2}</style>
-  <line class="wire" x1="15" y1="${y}" x2="${x}" y2="${y}"/>
-  <text class="txt" x="8" y="62">IN</text>`;
+  const el=$('schematic'), w=Math.max(320,el.clientWidth||700), h=180;
+  const y=82, left=32, right=32, usable=w-left-right;
+  const step=usable/(filterParts.length+1);
+  let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="${h}" viewBox="0 0 ${w} ${h}">
+  <style>.wire{stroke:#294a70;stroke-width:3;fill:none;stroke-linecap:round}.part{stroke:#17365d;stroke-width:3;fill:#eef5ff}.txt{font:700 13px -apple-system,BlinkMacSystemFont,sans-serif;fill:#172033}.port{font:700 13px -apple-system,BlinkMacSystemFont,sans-serif;fill:#172033}.gnd{stroke:#555;stroke-width:2}</style>
+  <line class="wire" x1="18" y1="${y}" x2="${left}" y2="${y}"/>
+  <text class="port" x="8" y="${y-20}">P1</text><text class="port" x="8" y="${y+28}">${$('zPort1').value} Ω</text>`;
+  let prevX=left;
   filterParts.forEach((p,i)=>{
-    const px=x+i*gap;
-    if(p.role==="Series"){
-      svg+=`<path class="wire" d="M${px} ${y} h14 q7 -16 14 0 q7 16 14 0 q7 -16 14 0 q7 16 14 0 h${gap-70}"/>
-      <text class="txt" x="${px+22}" y="55">${p.id}</text>`;
-    }else{
-      const cx=px+25;
-      svg+=`<line class="wire" x1="${px}" y1="${y}" x2="${cx}" y2="${y}"/>
-      <line class="wire" x1="${cx}" y1="${y}" x2="${cx}" y2="105"/>
-      <rect class="part" x="${cx-18}" y="105" width="36" height="16" rx="4"/>
-      <line class="wire" x1="${cx}" y1="121" x2="${cx}" y2="142"/>
-      <line class="gnd" x1="${cx-15}" y1="142" x2="${cx+15}" y2="142"/>
-      <line class="gnd" x1="${cx-10}" y1="147" x2="${cx+10}" y2="147"/>
-      <line class="gnd" x1="${cx-5}" y1="152" x2="${cx+5}" y2="152"/>
-      <text class="txt" x="${cx-13}" y="96">${p.id}</text>`;
+    const cx=left+step*(i+1);
+    if(p.kind==='L'){
+      const sx=cx-42, ex=cx+42;
+      svg+=`<line class="wire" x1="${prevX}" y1="${y}" x2="${sx}" y2="${y}"/>
+      <path class="wire" d="M${sx} ${y} q10 -22 20 0 q10 22 20 0 q10 -22 20 0 q10 22 20 0"/>
+      <line class="wire" x1="${ex}" y1="${y}" x2="${cx+step/2}" y2="${y}"/>
+      <text class="txt" x="${cx-12}" y="${y-35}">${p.id}</text>`;
+      prevX=cx+step/2;
+    } else {
+      svg+=`<line class="wire" x1="${prevX}" y1="${y}" x2="${cx}" y2="${y}"/>
+      <line class="wire" x1="${cx}" y1="${y}" x2="${cx}" y2="${y+22}"/>
+      <rect class="part" x="${cx-18}" y="${y+22}" width="36" height="18" rx="4"/>
+      <line class="wire" x1="${cx}" y1="${y+40}" x2="${cx}" y2="${y+57}"/>
+      <line class="gnd" x1="${cx-16}" y1="${y+57}" x2="${cx+16}" y2="${y+57}"/>
+      <line class="gnd" x1="${cx-11}" y1="${y+63}" x2="${cx+11}" y2="${y+63}"/>
+      <line class="gnd" x1="${cx-6}" y1="${y+69}" x2="${cx+6}" y2="${y+69}"/>
+      <text class="txt" x="${cx-12}" y="${y+15}">${p.id}</text>`;
+      prevX=cx;
     }
   });
-  const outx=x+(filterParts.length-1)*gap+gap-45;
-  svg+=`<text class="txt" x="${Math.min(outx+10,w-35)}" y="62">OUT</text></svg>`;
+  svg+=`<line class="wire" x1="${prevX}" y1="${y}" x2="${w-18}" y2="${y}"/>
+  <text class="port" x="${w-55}" y="${y-20}">P2</text><text class="port" x="${w-55}" y="${y+28}">${$('zPort2').value} Ω</text></svg>`;
   el.innerHTML=svg;
 }
 function zSeries(z){return z}
@@ -365,7 +372,7 @@ function cdiv(x,y){const q=y.r*y.r+y.i*y.i;return {r:(x.r*y.r+x.i*y.i)/q,i:(x.i*
 function cabs(x){return Math.hypot(x.r,x.i)}
 function csub(x,y){return {r:x.r-y.r,i:x.i-y.i}}
 function networkS(f){
-  const w=2*Math.PI*f, z0=+$('z0').value;
+  const w=2*Math.PI*f, z1=Math.max(0.1,+$('zPort1').value||75), z2=Math.max(0.1,+$('zPort2').value||75);
   let A={r:1,i:0},B={r:0,i:0},C={r:0,i:0},D={r:1,i:0};
   for(const p of filterParts){
     let a={r:1,i:0},b={r:0,i:0},c={r:0,i:0},d={r:1,i:0};
@@ -377,9 +384,12 @@ function networkS(f){
     const nD=cadd(cmul(C,b),cmul(D,d));
     A=nA;B=nB;C=nC;D=nD;
   }
-  const den=cadd(cadd(A,{r:B.r/z0,i:B.i/z0}),cadd({r:C.r*z0,i:C.i*z0},D));
-  const s21=cdiv({r:2,i:0},den);
-  const num=csub(cadd(A,{r:B.r/z0,i:B.i/z0}),cadd({r:C.r*z0,i:C.i*z0},D));
+  // Two-port S-parameters with real Port-1 and Port-2 reference impedances.
+  // S11 = (A + B/Z2 - Z1*C - D) / (A + B/Z2 + Z1*C + D)
+  // S21 = 2*sqrt(Z1/Z2) / (A + B/Z2 + Z1*C + D)
+  const den=cadd(cadd(A,{r:B.r/z2,i:B.i/z2}),cadd({r:C.r*z1,i:C.i*z1},D));
+  const s21=cdiv({r:2*Math.sqrt(z1/z2),i:0},den);
+  const num=csub(cadd(A,{r:B.r/z2,i:B.i/z2}),cadd({r:C.r*z1,i:C.i*z1},D));
   const s11=cdiv(num,den);
   return {s21,s11,A,B,C,D};
 }
@@ -409,7 +419,7 @@ function drawChart(){
   if(active){const mdb=db(mres[active.toLowerCase()]),mx=fx(markerF),my=fy(mdb);ctx.setLineDash([4,4]);ctx.strokeStyle=active==='S21'?'#1769aa':'#d14b3f';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(mx,T);ctx.lineTo(mx,T+ph);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.fillStyle=active==='S21'?'#1769aa':'#d14b3f';ctx.arc(mx,my,5,0,Math.PI*2);ctx.fill();ctx.fillStyle="#172033";ctx.font="bold 12px sans-serif";ctx.fillText(`${markerF.toFixed(3)} MHz`,Math.min(W-R-95,Math.max(L,mx-45)),Math.max(T+14,my-10));ctx.fillText(`${mdb.toFixed(2)} dB`,Math.min(W-R-65,Math.max(L,mx-30)),Math.min(T+ph-5,my+20));$('markerLabel').textContent=`Marker ${active}`;$('markerDb').textContent=mdb.toFixed(2)+" dB";}
   else {$('markerLabel').textContent='Marker';$('markerDb').textContent='—';}
   $('markerFreq').textContent=markerF.toFixed(3)+" MHz";
-  $('chartInfo').textContent=`X: ${fmin}–${fmax} MHz · Y: ${yBot}–${yTop} dB · Z0 ${$('z0').value} Ω · Order ${$('order').value}`;
+  $('chartInfo').textContent=`X: ${fmin}–${fmax} MHz · Y: ${yBot}–${yTop} dB · Port 1 ${$('zPort1').value} Ω · Port 2 ${$('zPort2').value} Ω · Order ${$('order').value}`;
 }
 function drawTuning(){
   const el=$('tuning');el.innerHTML="";
@@ -441,7 +451,7 @@ function drawAll(){
   drawSchematic();drawTuning();drawChart();drawValues()
 }
 $('reset').onclick=()=>{filterParts=filterBase.map(p=>({...p,value:p.value}));drawAll()};
-['order','z0','type','pbStart','pbEnd','sbStart','sbEnd'].forEach(id=>$(id).addEventListener('input',()=>{
+['order','zPort1','zPort2','type','pbStart','pbEnd','sbStart','sbEnd'].forEach(id=>$(id).addEventListener('input',()=>{
   calcBase();
 }));
 ['rippleDb','rejectionDb'].forEach(id=>$(id).addEventListener('input',()=>{
