@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Filter Simulator V12.0 REAL LPF TOPOLOGY</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+.login{min-height:100vh;display:grid;place-items:center;padding:24px}.loginCard{width:min(390px,100%);background:#fff;border-radius:18px;padding:24px;box-shadow:0 8px 30px #0002}.loginCard h1{margin:0 0 8px;font-size:24px}.loginCard p{color:#667085}.loginCard input{width:100%;padding:13px;border:1px solid #ccd3da;border-radius:10px;margin:8px 0}.loginCard button{width:100%;padding:13px;border:0;border-radius:10px;background:#1769aa;color:white;font-weight:700}.err{color:#c62828;min-height:22px;margin-top:8px}
+.app{max-width:1100px;margin:auto;padding:14px}.top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}.top h1{font-size:20px;margin:4px 0}.badge{font-size:12px;background:#e8f2ff;color:#1769aa;border-radius:999px;padding:5px 9px}.card{background:#fff;border-radius:15px;padding:14px;margin:10px 0;box-shadow:0 2px 10px #0000000d}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.field label{display:block;font-size:12px;color:#667085;margin-bottom:4px}.field input,.field select{width:100%;padding:9px;border:1px solid #cfd6dd;border-radius:9px;background:white}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{padding:10px 14px;border:0;border-radius:9px;background:#1769aa;color:#fff;font-weight:700}.actions .secondary{background:#e9eef3;color:#17202a}.check{display:flex;gap:5px;align-items:center;font-size:13px}.specNote{font-size:12px;color:#667085;margin-top:8px}
+.chartWrap{position:relative;background:#0d1117;border-radius:12px;padding:8px;touch-action:none}.chartWrap canvas{width:100%;height:390px;display:block;border-radius:8px}.legend{display:flex;gap:14px;align-items:center;position:absolute;top:15px;left:16px;color:#fff;font-size:12px}.dot{width:10px;height:3px;display:inline-block;background:#4fc3f7}.dot.s11{background:#ffca58}.markerInfo{position:absolute;right:12px;top:12px;background:#0009;color:#fff;padding:7px 9px;border-radius:8px;font-size:12px}
+.tuneGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sectionTitle{font-weight:800;margin-bottom:8px}.row{display:grid;grid-template-columns:72px 1fr 36px 36px;gap:6px;align-items:center;margin:6px 0}.row input{width:100%;padding:7px;border:1px solid #ccd3da;border-radius:7px;text-align:right}.row button{width:36px;height:34px;border:1px solid #ccd3da;background:#f6f8fa;border-radius:7px}.muted{color:#667085;font-size:12px}.schematic{overflow:auto}.schematic svg{min-width:720px;width:100%;height:170px}.status{font-size:12px;color:#475467;margin-top:8px}
+@media(max-width:720px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.chartWrap canvas{height:310px}.tuneGrid{grid-template-columns:1fr}.row{grid-template-columns:62px 1fr 36px 36px}.app{padding:8px}}
+</style>
+</head>
+<body>
+
+<div id="app" class="app">
+ <div class="top"><div><h1>LC Filter Simulator V12.0 REAL LPF</h1><div style="font-size:12px;color:#1769aa;margin-top:4px">BUILD: V12.0-20261007 • exact supplied LPF topology</div><span class="badge">REAL LPF TOPOLOGY • S11 / S21</span></div></div>
+ <div class="card"><div class="grid">
+  <div class="field"><label>Path</label><input value="LPF (Hardware)" disabled></div>
+  <div class="field"><label>Topology</label><input value="4 resonant sections + I/O" disabled></div>
+  <div class="field"><label>Port 1 Z (Ω)</label><input id="z1" type="number" value="75" min="1" step="1"></div>
+  <div class="field"><label>Port 2 Z (Ω)</label><input id="z2" type="number" value="75" min="1" step="1"></div>
+  <div class="field"><label>Passband End (MHz)</label><input id="pb" type="number" value="85" min="0.001" step="0.001"></div>
+  <div class="field"><label>Stopband Start (MHz)</label><input id="sb" type="number" value="108" min="0.001" step="0.001"></div>
+  <div class="field"><label>X Start (MHz)</label><input id="x0" type="number" value="1" min="0.001" step="0.1"></div>
+  <div class="field"><label>X End (MHz)</label><input id="x1" type="number" value="1218" min="0.01" step="1"></div>
+  <div class="field"><label>Y Bottom (dB)</label><input id="y0" type="number" value="-80" step="1"></div>
+  <div class="field"><label>Y Top (dB)</label><input id="y1" type="number" value="5" step="1"></div>
+ </div><div class="actions" style="margin-top:10px"><button id="auto">Recalculate</button><button id="reset" class="secondary">Reset</button><label class="check"><input id="showS21" type="checkbox" checked>S21</label><label class="check"><input id="showS11" type="checkbox" checked>S11</label></div><div class="specNote">本版不套用 Butterworth 虛擬階數；直接使用你提供的實際 LPF schematic。修改元件值後立即重新計算 S11 / S21。</div></div>
+ <div class="card"><div class="chartWrap"><canvas id="chart"></canvas><div class="legend"><span><i class="dot"></i> S21</span><span><i class="dot s11"></i> S11</span></div><div id="markerInfo" class="markerInfo">Marker: —</div></div></div>
+ <div class="card"><div class="sectionTitle">Circuit Topology</div><div id="schematic" class="schematic"></div></div>
+ <div class="card"><div class="sectionTitle">Manual Tune <span class="muted">直接修改數值；± 每次 1 nH / 1 pF</span></div><div id="tune" class="tuneGrid"></div><div id="status" class="status"></div></div>
+</div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const state={path:'LPF',z1:75,z2:75,pb:85,sb:108,x0:1,x1:1218,y0:-80,y1:5,showS21:true,showS11:true,markerF:85,
+  hw:{
+    L805:180,R873:0,
+    L806:150,C830:10,C853:39,
+    L807:120,C831:18,C837:30,
+    L808:150,C832:1.5,C838:39,
+    C852:33,C833:15,C839:27,
+    R874:0,C834:null,C840:null,C841:null
+  }
+};
+function num(id,def){const v=parseFloat($(id).value);return Number.isFinite(v)?v:def}
+function setState(){state.z1=Math.max(1,num('z1',75));state.z2=Math.max(1,num('z2',75));state.pb=Math.max(.001,num('pb',85));state.sb=Math.max(.001,num('sb',108));state.x0=Math.max(.001,num('x0',1));state.x1=Math.max(state.x0+.01,num('x1',1218));state.y0=num('y0',-80);state.y1=num('y1',5);state.showS21=$('showS21').checked;state.showS11=$('showS11').checked}
+function c(re=0,im=0){return {re,im}}
+function cadd(a,b){return {re:a.re+b.re,im:a.im+b.im}}
+function cmul(a,b){return {re:a.re*b.re-a.im*b.im,im:a.re*b.im+a.im*b.re}}
+function series(Z){return [[c(1,0),Z],[c(0,0),c(1,0)]]}
+function shunt(Y){return [[c(1,0),c(0,0)],[Y,c(1,0)]]}
+function mm(a,b){return [[cadd(cmul(a[0][0],b[0][0]),cmul(a[0][1],b[1][0])),cadd(cmul(a[0][0],b[0][1]),cmul(a[0][1],b[1][1]))],[cadd(cmul(a[1][0],b[0][0]),cmul(a[1][1],b[1][0])),cadd(cmul(a[1][0],b[0][1]),cmul(a[1][1],b[1][1]))]]}
+function zL(f,LnH){return {re:0,im:2*Math.PI*f*LnH*1e-9}}
+function zC(f,CpF){return {re:0,im:-1/(2*Math.PI*f*CpF*1e-12)}}
+function zParallelLC(f,LnH,CpF){if(!(LnH>0)||!(CpF>0))return zL(f,LnH);const ZL=zL(f,LnH),ZC=zC(f,CpF),den={re:ZL.re+ZC.re,im:ZL.im+ZC.im};const n={re:ZL.re*ZC.re-ZL.im*ZC.im,im:ZL.re*ZC.im+ZL.im*ZC.re};const d=den.re*den.re+den.im*den.im;if(d<1e-40)return {re:1e12,im:0};return {re:n.re/d,im:n.im/d}}
+function add(a,b){return {re:a.re+b.re,im:a.im+b.im}}
+function div(a,b){const d=b.re*b.re+b.im*b.im;return d<1e-40?{re:1e12,im:0}:{re:(a.re*b.re+a.im*b.im)/d,im:(a.im*b.re-a.re*b.im)/d}}
+function seriesR(r){return series({re:r,im:0})}
+function addShuntC(M,f,CpF){if(CpF==null||!(CpF>0))return M;return mm(M,shunt({re:0,im:2*Math.PI*f*CpF*1e-12}))}
+function network(f){
+  const h=state.hw;let M=[[c(1,0),c(0,0)],[c(0,0),c(1,0)]];
+  // Exact LPF hardware topology from supplied schematic.
+  // Input: L805 -> R873.
+  M=mm(M,series(zL(f,h.L805))); M=mm(M,seriesR(h.R873));
+  // Node after R873: C853 to GND; L806 || C830; node C837.
+  M=addShuntC(M,f,h.C853); M=mm(M,series(zParallelLC(f,h.L806,h.C830))); M=addShuntC(M,f,h.C837);
+  // L807 || C831; node C838.
+  M=mm(M,series(zParallelLC(f,h.L807,h.C831))); M=addShuntC(M,f,h.C838);
+  // L808 || C832; node C839.
+  M=mm(M,series(zParallelLC(f,h.L808,h.C832))); M=addShuntC(M,f,h.C839);
+  // 33 nH series inductor (RefDes L852 in the supplied schematic) || optional C833; node C840.
+  M=mm(M,series(zParallelLC(f,h.C852,h.C833))); M=addShuntC(M,f,h.C840);
+  // R874 0 ohm with optional C834 in parallel; output node C841.
+  let zR874={re:h.R874,im:0}; if(h.C834!=null&&h.C834>0) zR874=zParallelWithR(f,h.R874,h.C834);
+  M=mm(M,series(zR874)); M=addShuntC(M,f,h.C841);
+  const A=M[0][0],B=M[0][1],C=M[1][0],D=M[1][1];
+  const den=add(add(A,{re:B.re/state.z2,im:B.im/state.z2}),add({re:C.re*state.z1,im:C.im*state.z1},D));
+  const s11=div(add(add(A,{re:-B.re/state.z2,im:-B.im/state.z2}),add({re:-C.re*state.z1,im:-C.im*state.z1},D)),den);
+  const s21=div({re:2*Math.sqrt(state.z1/state.z2),im:0},den);
+  const mag=x=>Math.hypot(x.re,x.im);
+  return {s11:20*Math.log10(Math.max(1e-12,mag(s11))),s21:20*Math.log10(Math.max(1e-12,mag(s21)))}
+}
+function parallelAdmittance(a,b){const ya=div({re:1,im:0},a),yb=div({re:1,im:0},b);return div({re:1,im:0},add(ya,yb))}
+function zParallelWithR(f,R,CpF){if(CpF==null||!(CpF>0))return {re:R,im:0};return parallelAdmittance({re:R,im:0},zC(f,CpF))}
+function row(ref,key,u,v,step){const display=v==null?'NL':v;return `<div class="row"><span><b>${ref}</b> <small>${u}</small></span><input data-k="${key}" type="text" inputmode="decimal" value="${display}" ${v==null?'placeholder="NL"':''}><button data-d="-1" data-k="${key}">−</button><button data-d="1" data-k="${key}">+</button></div>`}
+function renderTune(){const el=$('tune');el.innerHTML=`
+  <div class="card" style="margin:0"><div class="sectionTitle">Input / Output</div>${row('L805','L805','nH',state.hw.L805,1)}${row('R873','R873','Ω',state.hw.R873,1)}</div>
+  <div class="card" style="margin:0"><div class="sectionTitle">Section 1</div>${row('L806','L806','nH',state.hw.L806,1)}${row('C830','C830','pF',state.hw.C830,1)}${row('C853','C853','pF',state.hw.C853,1)}${row('C837','C837','pF',state.hw.C837,1)}</div>
+  <div class="card" style="margin:0"><div class="sectionTitle">Section 2</div>${row('L807','L807','nH',state.hw.L807,1)}${row('C831','C831','pF',state.hw.C831,1)}${row('C838','C838','pF',state.hw.C838,1)}</div>
+  <div class="card" style="margin:0"><div class="sectionTitle">Section 3</div>${row('L808','L808','nH',state.hw.L808,1)}${row('C832','C832','pF',state.hw.C832,1)}${row('C839','C839','pF',state.hw.C839,1)}</div>
+  <div class="card" style="margin:0"><div class="sectionTitle">Section 4</div>${row('C852','C852','nH',state.hw.C852,1)}${row('C833','C833','pF',state.hw.C833,1)}${row('C840','C840','pF',state.hw.C840,1)}</div>
+  <div class="card" style="margin:0"><div class="sectionTitle">Output</div>${row('R874','R874','Ω',state.hw.R874,1)}${row('C834','C834','pF',state.hw.C834,1)}${row('C841','C841','pF',state.hw.C841,1)}</div>`}
+function bindTune(){document.querySelectorAll('#tune input').forEach(inp=>inp.addEventListener('change',()=>{const k=inp.dataset.k;const raw=String(inp.value).trim().toUpperCase();if(raw==='NL'||raw===''){state.hw[k]=null}else{const v=parseFloat(raw);if(Number.isFinite(v)&&v>=0)state.hw[k]=v}renderAll('Hardware value updated')}));document.querySelectorAll('#tune button').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.k;let v=state.hw[k];if(v==null)v=0;const step=/^C/.test(k)?1:1;state.hw[k]=Math.max(0,v+(+b.dataset.d)*step);renderAll('Hardware value updated')}))}
+function drawSchematic(){const s=$('schematic');const W=1280,H=390;const y=185;const gndY=300;const x0=55;const xs=[220,430,640,850,1055];let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><defs><style>text{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}</style></defs><line x1="${x0}" y1="${y}" x2="1180" y2="${y}" stroke="#344054" stroke-width="3"/>`;
+  // series L805 + R873
+  svg+=`<path d="M55 185 l12 -14 l12 28 l12 -28 l12 28 l12 -14" fill="none" stroke="#1769aa" stroke-width="4"/><text x="55" y="145" font-size="15">L805 180nH</text><text x="55" y="235" font-size="13">R873 0Ω</text>`;
+  const stages=[['L806','C830','C853','150nH','10pF','39pF'],['L807','C831','C837','120nH','18pF','30pF'],['L808','C832','C838','150nH','1.5pF','39pF'],['C852','C833','C839','33nH','NL/15pF','27pF']];
+  const start=[190,400,610,820];
+  stages.forEach((a,i)=>{const x=start[i]; const mid=x+105;
+    svg+=`<path d="M${x} ${y} l10 -14 l10 28 l10 -28 l10 28 l10 -14" fill="none" stroke="#1769aa" stroke-width="4"/>`;
+    svg+=`<line x1="${x}" y1="115" x2="${x+210}" y2="115" stroke="#667085" stroke-width="2"/><line x1="${x+90}" y1="105" x2="${x+90}" y2="125" stroke="#1769aa" stroke-width="3"/><line x1="${x+120}" y1="105" x2="${x+120}" y2="125" stroke="#1769aa" stroke-width="3"/>`;
+    svg+=`<line x1="${mid}" y1="y" x2="${mid}" y2="${gndY}" stroke="#344054" stroke-width="2"/>`;
+    svg+=`<line x1="${mid-14}" y1="${gndY}" x2="${mid+14}" y2="${gndY}" stroke="#1769aa" stroke-width="4"/><line x1="${mid-10}" y1="${gndY+10}" x2="${mid+10}" y2="${gndY+10}" stroke="#1769aa" stroke-width="4"/>`;
+    svg+=`<text x="${x}" y="55" font-size="14">${a[0]} ∥ ${a[1]}</text><text x="${x}" y="75" font-size="13">${a[3]} ∥ ${a[4]}</text><text x="${x}" y="355" font-size="13">${a[2]} = ${a[5]}</text>`;
+  });
+  // fix invalid y attribute generated above by replacing literal y="y"
+  svg=svg.replace(/y1="y"/g,`y1="${y}"`);
+  // shunt at final node C840 and output network
+  svg+=`<line x1="925" y1="${y}" x2="925" y2="${gndY}" stroke="#344054" stroke-width="2"/><line x1="911" y1="${gndY}" x2="939" y2="${gndY}" stroke="#1769aa" stroke-width="4"/><line x1="915" y1="${gndY+10}" x2="935" y2="${gndY+10}" stroke="#1769aa" stroke-width="4"/><text x="895" y="355" font-size="13">C840 = NL/22pF</text>`;
+  // R874 and C834 parallel; output C841
+  svg+=`<rect x="1030" y="172" width="60" height="26" fill="white" stroke="#1769aa" stroke-width="3"/><text x="1040" y="190" font-size="12">R874</text><line x1="1030" y1="140" x2="1090" y2="140" stroke="#667085" stroke-width="2"/><line x1="1045" y1="132" x2="1045" y2="148" stroke="#1769aa" stroke-width="3"/><line x1="1075" y1="132" x2="1075" y2="148" stroke="#1769aa" stroke-width="3"/><line x1="1060" y1="198" x2="1060" y2="300" stroke="#344054" stroke-width="2"/><line x1="1046" y1="300" x2="1074" y2="300" stroke="#1769aa" stroke-width="4"/><line x1="1050" y1="310" x2="1070" y2="310" stroke="#1769aa" stroke-width="4"/><text x="1025" y="125" font-size="13">C834 = NL</text>`;
+  svg+=`<line x1="1120" y1="185" x2="1120" y2="300" stroke="#344054" stroke-width="2"/><line x1="1106" y1="300" x2="1134" y2="300" stroke="#1769aa" stroke-width="4"/><line x1="1110" y1="310" x2="1130" y2="310" stroke="#1769aa" stroke-width="4"/><text x="1090" y="355" font-size="13">C841 = NL</text><text x="20" y="210" font-size="14">PORT 1</text><text x="1150" y="210" font-size="14">PORT 2</text><text x="420" y="25" font-size="18" font-weight="700">5–85 MHz LPF • supplied hardware topology</text></svg>`;
+  s.innerHTML=svg}
+function draw(){const c=$('chart'),r=c.getBoundingClientRect(),d=devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;const ctx=c.getContext('2d');ctx.setTransform(d,0,0,d,0,0);const W=r.width,H=r.height;ctx.clearRect(0,0,W,H);const pad={l:48,r:14,t:25,b:30};const xMap=f=>pad.l+(Math.log10(f)-Math.log10(state.x0))/(Math.log10(state.x1)-Math.log10(state.x0))*(W-pad.l-pad.r);const yMap=v=>pad.t+(state.y1-v)/(state.y1-state.y0)*(H-pad.t-pad.b);ctx.strokeStyle='#29313d';ctx.lineWidth=1;for(let j=0;j<=5;j++){const y=pad.t+j*(H-pad.t-pad.b)/5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r,y);ctx.stroke();const val=state.y1-j*(state.y1-state.y0)/5;ctx.fillStyle='#b7c0cc';ctx.font='11px sans-serif';ctx.fillText(val.toFixed(0),5,y+4)}for(let i=0;i<=6;i++){const x=pad.l+i*(W-pad.l-pad.r)/6;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,H-pad.b);ctx.stroke()}const pts=[];const n=700;for(let i=0;i<n;i++){const f=10**(Math.log10(state.x0)+(Math.log10(state.x1)-Math.log10(state.x0))*i/(n-1));const q=network(f*1e6);pts.push({f,s21:q.s21,s11:q.s11})}function curve(key,dash){ctx.strokeStyle=key==='s21'?'#4fc3f7':'#ffca58';ctx.lineWidth=2;ctx.setLineDash(dash?[5,4]:[]);ctx.beginPath();pts.forEach((p,i)=>{const x=xMap(p.f),y=yMap(Math.max(state.y0,Math.min(state.y1,p[key])));i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();ctx.setLineDash([])}if(state.showS21)curve('s21',false);if(state.showS11)curve('s11',true);const mx=Math.max(state.x0,Math.min(state.x1,state.markerF));const mi=Math.round((Math.log10(mx)-Math.log10(state.x0))/(Math.log10(state.x1)-Math.log10(state.x0))*(n-1));const mp=pts[Math.max(0,Math.min(n-1,mi))];const xx=xMap(mx);ctx.strokeStyle='#fff';ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(xx,pad.t);ctx.lineTo(xx,H-pad.b);ctx.stroke();ctx.setLineDash([]);$('markerInfo').textContent=`Marker: ${mx.toFixed(3)} MHz | S21 ${mp.s21.toFixed(2)} dB | S11 ${mp.s11.toFixed(2)} dB`;c._pad=pad}
+function renderAll(msg){setState();renderTune();bindTune();drawSchematic();draw();$('status').textContent=msg||'LPF hardware topology • 4 resonant sections + I/O components'}
+function marker(e){const c=$('chart'),rect=c.getBoundingClientRect(),x=e.clientX-rect.left,pad=c._pad;const ratio=Math.max(0,Math.min(1,(x-pad.l)/(rect.width-pad.l-pad.r)));state.markerF=10**(Math.log10(state.x0)+ratio*(Math.log10(state.x1)-Math.log10(state.x0)));draw()}
+function reset(){Object.assign(state.hw,{L805:180,R873:0,L806:150,C830:10,C853:39,L807:120,C831:18,C837:30,L808:150,C832:1.5,C838:39,C852:33,C833:15,C839:27,R874:0,C834:null,C840:null,C841:null});$('z1').value=75;$('z2').value=75;$('pb').value=85;$('sb').value=108;$('x0').value=1;$('x1').value=1218;$('y0').value=-80;$('y1').value=5;$('showS21').checked=true;$('showS11').checked=true;state.markerF=85;renderAll('Reset to supplied LPF hardware values')}
+$('reset').onclick=reset;['z1','z2','pb','sb','x0','x1','y0','y1','showS21','showS11'].forEach(id=>$(id).addEventListener('change',()=>renderAll('Settings updated')));$('auto').onclick=()=>renderAll('LPF hardware topology recalculated');$('chart').addEventListener('pointerdown',e=>{e.preventDefault();$('chart').setPointerCapture?.(e.pointerId);marker(e)});$('chart').addEventListener('pointermove',e=>{if(e.buttons)marker(e)});window.addEventListener('resize',draw);document.addEventListener('DOMContentLoaded',()=>{try{renderAll('LPF hardware topology loaded');}catch(e){console.error(e);$('status').textContent='初始化錯誤：'+e.message;}});
+</script></body></html>
