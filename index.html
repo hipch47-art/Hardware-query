@@ -88,6 +88,7 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
    <div id="partCount" class="resultCount"></div>
   </div>
   <div id="partResult"></div>
+ </div>
  <div id="filterPage" class="hidden">
   <button class="back" onclick="goHome()">← 回首頁</button>
   <div class="filterWrap">
@@ -181,7 +182,7 @@ function showPart(){
 function showFilter(){
  hidePages();
  document.getElementById("filterPage").classList.remove("hidden");
- if(window.filterInit) window.filterInit();
+ if(typeof draw === "function") draw();
 }
 function loadModels(){
  const select=document.getElementById("modelSelect");
