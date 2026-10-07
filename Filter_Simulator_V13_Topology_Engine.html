@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LC Filter Simulator V13 Topology Engine</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit} .wrap{max-width:1100px;margin:auto;padding:14px}.card{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 14px #00000010}.title{font-size:22px;font-weight:800}.sub{color:#687386;font-size:13px;margin-top:4px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field label{display:block;font-size:13px;color:#697586;margin-bottom:5px}.field input,.field select{width:100%;height:46px;border:1px solid #cbd3dd;border-radius:11px;padding:0 12px;background:#fff}.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:800;background:#256eb5;color:#fff}.btn.secondary{background:#e9edf2;color:#17202a}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.checks{display:flex;gap:18px;align-items:center}.checks label{font-weight:700}.note{font-size:13px;color:#697586;line-height:1.55}.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#edf3fa;color:#235a8d;font-size:12px;font-weight:800}.topology{overflow-x:auto;border:1px solid #e1e5eb;border-radius:14px;background:#fff}.topology svg{display:block;min-width:760px;width:100%;height:auto}.status{font-size:13px;color:#51606f}.warning{background:#fff8e7;border:1px solid #f1d48a;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.5}.chartbox{background:#0e1218;border-radius:14px;padding:10px}.chartbox canvas{width:100%;height:300px;display:block}.legend{display:flex;gap:18px;font-size:13px;margin:7px 4px 0;color:#e9eef5}.dot{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:5px}.manual{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.manual .m{border:1px solid #e1e5eb;border-radius:12px;padding:10px}.mhead{font-weight:800;margin-bottom:7px}.mrow{display:grid;grid-template-columns:1fr 86px 34px 34px;gap:5px;align-items:center;margin:5px 0}.mrow input{width:100%;height:36px;border:1px solid #cbd3dd;border-radius:8px;padding:0 7px}.pm{height:36px;border:1px solid #cbd3dd;border-radius:8px;background:#f7f8fa}.small{font-size:12px;color:#697586}@media(max-width:700px){.grid,.manual{grid-template-columns:1fr}.title{font-size:20px}.mrow{grid-template-columns:1fr 90px 34px 34px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+ <div class="title">LC Filter Simulator <span class="badge">V13 Topology Engine</span></div>
+ <div class="sub">LPF = Elliptic　｜　HPF = Inverse Chebyshev</div>
+</div>
+<div class="card">
+ <div class="grid">
+  <div class="field"><label>Filter Type</label><select id="type"><option>LPF</option><option>HPF</option></select></div>
+  <div class="field"><label>Order</label><select id="order"><option value="auto">Auto</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
+  <div class="field"><label>Pass Frequency (MHz)</label><input id="pass" type="number" value="85" step="0.1"></div>
+  <div class="field"><label>Rejection Frequency (MHz)</label><input id="reject" type="number" value="108" step="0.1"></div>
+  <div class="field"><label>Rejection Attenuation (dB)</label><input id="att" type="number" value="50" step="0.1"></div>
+  <div class="field"><label>Port 1 Z (Ω)</label><input id="z1" type="number" value="75" step="1"></div>
+  <div class="field"><label>Port 2 Z (Ω)</label><input id="z2" type="number" value="75" step="1"></div>
+  <div class="field"><label>X Start (MHz)</label><input id="xs" type="number" value="1" step="0.1"></div>
+  <div class="field"><label>X End (MHz)</label><input id="xe" type="number" value="1218" step="1"></div>
+  <div class="field"><label>Y Bottom (dB)</label><input id="yb" type="number" value="-80" step="1"></div>
+  <div class="field"><label>Y Top (dB)</label><input id="yt" type="number" value="5" step="1"></div>
+ </div>
+ <div class="row" style="margin-top:12px">
+  <button class="btn" id="calc">Generate Topology</button>
+  <button class="btn secondary" id="reset">Reset</button>
+  <div class="checks"><label><input id="s21" type="checkbox" checked> S21</label><label><input id="s11" type="checkbox" checked> S11</label></div>
+ </div>
+ <div class="note" style="margin-top:10px">本版先鎖定你確認的兩套拓撲：LPF 使用 Elliptic、HPF 使用 Inverse Chebyshev。Order 改變時，電路圖會同步增減元件。Cutoff Frequency 已移除。</div>
+</div>
+<div class="card">
+ <div class="row"><div class="title" id="designTitle">LPF — Elliptic</div><div class="badge" id="orderBadge">Order 5</div></div>
+ <div class="topology" style="margin-top:12px"><svg id="svg" viewBox="0 0 1100 470" preserveAspectRatio="xMinYMin meet"></svg></div>
+ <div class="status" id="status" style="margin-top:9px"></div>
+</div>
+<div class="card">
+ <div class="title">Response Preview</div>
+ <div class="warning">注意：此 V13 先驗證「Filter Type + Order → 正確拓撲生成」。曲線目前是規格導向的預覽，不宣稱為最終 Elliptic / Inverse-Chebyshev 精確係數計算。下一階段才接正式係數與 Auto Calculate。</div>
+ <div class="chartbox" style="margin-top:10px"><canvas id="chart" width="1000" height="320"></canvas><div class="legend"><span><i class="dot" style="background:#63c7ff"></i>S21</span><span><i class="dot" style="background:#ffd66b"></i>S11</span></div></div>
+</div>
+<div class="card">
+ <div class="title">Manual Tune</div>
+ <div class="small" style="margin:4px 0 10px">本版顯示由拓撲生成器建立的元件；直接修改數值可作為下一階段精算引擎的輸入。</div>
+ <div class="manual" id="manual"></div>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);let state={type:'LPF',order:5,parts:[]};
+function num(id){return Number($(id).value)}
+function effectiveOrder(){let o=$("order").value; if(o==='auto'){let p=num('pass'),r=num('reject'),a=num('att'); if(state.type==='LPF'){return Math.max(3,Math.min(10,Math.ceil(Math.log10(Math.max(1,a))/Math.log10(Math.max(1,r/Math.max(p,1))))+2));} return Math.max(3,Math.min(10,Math.ceil(Math.log10(Math.max(1,a))/Math.log10(Math.max(1,p/Math.max(r,1))))+2));}return Number(o)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function lpftopo(n){let a=[];let shuntCount=Math.ceil(n/2),seriesCount=Math.floor(n/2);for(let i=1;i<=shuntCount;i++)a.push({kind:'Csh',ref:'C'+(2*i-1),v:'—',unit:'pF'});for(let i=1;i<=seriesCount;i++)a.push({kind:'Res',ref:'L'+(2*i),v:'—',unit:'nH',cp:'C'+(2*i)});return a}
+function hpftopo(n){let a=[];let seriesCount=Math.ceil(n/2),branchCount=Math.floor(n/2);for(let i=1;i<=seriesCount;i++)a.push({kind:'Cser',ref:'C'+(2*i-1),v:'—',unit:'pF'});for(let i=1;i<=branchCount;i++)a.push({kind:'LCsh',ref:'C'+(2*i),v:'—',unit:'pF',l:'L'+(2*i)});return a}
+function drawLPF(n){let svg=$('svg'),w=1100,h=470;let sh=Math.ceil(n/2),se=Math.floor(n/2);let step=900/Math.max(n,1),x=90,y=230;let out=`<rect x="0" y="0" width="${w}" height="${h}" fill="#fff"/><text x="45" y="42" font-size="24" font-weight="800">Elliptic Lowpass — ${n}th Order</text><text x="45" y="68" font-size="14" fill="#697586">Shunt-first topology · order dynamically controls the network</text><line x1="55" y1="230" x2="1040" y2="230" stroke="#364152" stroke-width="4"/><text x="35" y="225" font-size="13">PORT 1</text><text x="1010" y="225" font-size="13">PORT 2</text>`;let si=1,ci=1; for(let k=1;k<=n;k++){if(k%2===1){let cx=x+step/2;out+=`<line x1="${x}" y1="230" x2="${cx-35}" y2="230" stroke="#364152" stroke-width="4"/><rect x="${cx-35}" y="205" width="70" height="50" rx="8" fill="#eef5fb" stroke="#2f6fa8"/><text x="${cx}" y="226" text-anchor="middle" font-size="14" font-weight="700">C${2*ci-1}</text><text x="${cx}" y="245" text-anchor="middle" font-size="12">Shunt C</text><line x1="${cx+35}" y1="230" x2="${x+step}" y2="230" stroke="#364152" stroke-width="4"/><line x1="${cx}" y1="255" x2="${cx}" y2="365" stroke="#2f6fa8" stroke-width="4"/><line x1="${cx-24}" y1="365" x2="${cx+24}" y2="365" stroke="#2f6fa8" stroke-width="5"/><line x1="${cx-18}" y1="375" x2="${cx+18}" y2="375" stroke="#2f6fa8" stroke-width="5"/><text x="${cx}" y="405" text-anchor="middle" font-size="12">C${2*ci-1} → GND</text>`;ci++;x+=step}else{let cx=x+step/2;out+=`<rect x="${cx-55}" y="205" width="110" height="50" rx="8" fill="#f7f2e8" stroke="#9a7a2d"/><text x="${cx}" y="226" text-anchor="middle" font-size="14" font-weight="700">L${si*2} ∥ C${si*2}</text><text x="${cx}" y="245" text-anchor="middle" font-size="12">Series resonator</text>`;si++;x+=step}}
+out+='</svg>';svg.innerHTML=out.replace('</svg>','');svg.setAttribute('viewBox','0 0 1100 470')}
+function drawHPF(n){let svg=$('svg'),w=1100,h=470;let step=900/Math.max(n,1),x=90;let out=`<rect x="0" y="0" width="${w}" height="${h}" fill="#fff"/><text x="45" y="42" font-size="24" font-weight="800">Inverse Chebyshev Highpass — ${n}th Order</text><text x="45" y="68" font-size="14" fill="#697586">Series-first topology · order dynamically controls the network</text><line x1="55" y1="230" x2="1040" y2="230" stroke="#364152" stroke-width="4"/><text x="35" y="225" font-size="13">PORT 1</text><text x="1010" y="225" font-size="13">PORT 2</text>`;let c=1,l=2;for(let k=1;k<=n;k++){let cx=x+step/2;if(k%2===1){out+=`<rect x="${cx-42}" y="205" width="84" height="50" rx="8" fill="#eef5fb" stroke="#2f6fa8"/><text x="${cx}" y="226" text-anchor="middle" font-size="14" font-weight="700">C${c}</text><text x="${cx}" y="245" text-anchor="middle" font-size="12">Series C</text>`;c+=2}else{out+=`<rect x="${cx-58}" y="198" width="116" height="64" rx="8" fill="#f7f2e8" stroke="#9a7a2d"/><text x="${cx}" y="221" text-anchor="middle" font-size="14" font-weight="700">C${c} — L${l}</text><text x="${cx}" y="242" text-anchor="middle" font-size="12">Series LC → GND</text><line x1="${cx}" y1="262" x2="${cx}" y2="365" stroke="#2f6fa8" stroke-width="4"/><line x1="${cx-24}" y1="365" x2="${cx+24}" y2="365" stroke="#2f6fa8" stroke-width="5"/><line x1="${cx-18}" y1="375" x2="${cx+18}" y2="375" stroke="#2f6fa8" stroke-width="5"/>`;c+=2;l+=2}x+=step}svg.innerHTML=out+`<text x="550" y="430" text-anchor="middle" font-size="13" fill="#697586">Series C alternates with shunt series C-L resonators</text>`}
+function draw(){let n=effectiveOrder();state.order=n;$('orderBadge').textContent='Order '+n;$('designTitle').textContent=state.type==='LPF'?'LPF — Elliptic':'HPF — Inverse Chebyshev';state.parts=state.type==='LPF'?lpftopo(n):hpftopo(n);if(state.type==='LPF')drawLPF(n);else drawHPF(n);renderManual();drawChart();$('status').textContent=`Generated ${state.type} topology · ${n}th order · Pass ${num('pass')} MHz · Rejection ${num('reject')} MHz · ${num('att')} dB`}
+function renderManual(){let el=$('manual');el.innerHTML=state.parts.map((p,i)=>{if(p.kind==='Res')return `<div class="m"><div class="mhead">Section ${i+1}</div><div class="mrow"><span>${p.ref} (${p.unit})</span><input type="number" value="${p.v==='—'?150:p.v}" step="1"><button class="pm">−</button><button class="pm">+</button></div><div class="small">Parallel capacitor: ${p.cp}</div></div>`;if(p.kind==='LCsh')return `<div class="m"><div class="mhead">Section ${i+1}</div><div class="mrow"><span>${p.ref} (${p.unit})</span><input type="number" value="${p.v==='—'?30:p.v}" step="1"><button class="pm">−</button><button class="pm">+</button></div><div class="small">Series inductor: ${p.l}</div></div>`;return `<div class="m"><div class="mhead">Element ${i+1}</div><div class="mrow"><span>${p.ref} (${p.unit})</span><input type="number" value="${p.v==='—'?30:p.v}" step="1"><button class="pm">−</button><button class="pm">+</button></div></div>`}).join('')}
+function drawChart(){let c=$('chart'),ctx=c.getContext('2d'),w=c.width=c.clientWidth*2,h=c.height=320*2;ctx.scale(2,2);w/=2;h/=2;ctx.fillStyle='#0e1218';ctx.fillRect(0,0,w,h);let pad={l:42,r:16,t:18,b:28},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;ctx.strokeStyle='#293241';ctx.lineWidth=1;for(let i=0;i<=5;i++){let y=pad.t+i*ph/5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+pw,y);ctx.stroke()}for(let i=0;i<=6;i++){let x=pad.l+i*pw/6;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+ph);ctx.stroke()}let p=num('pass'),r=num('reject'),yb=num('yb'),yt=num('yt'),type=state.type,n=state.order;function s21(f){if(type==='LPF'){let q=f/p;return Math.max(yb, -0.2*Math.pow(q,2*n)*20/(1+Math.pow(q,2*n))*0.05 - (f>r?num('att')*(f-r)/(Math.max(r,p)*2):0));}else{let q=p/Math.max(f,0.01);return Math.max(yb, -0.2*Math.pow(q,2*n)*20/(1+Math.pow(q,2*n))*0.05 - (f<r?num('att')*(r-f)/(Math.max(p,r)*2):0));}}function s11(f){let v=s21(f);return Math.max(yb,Math.min(yt,-Math.abs(v)*0.15-1));}function plot(fn){ctx.beginPath();for(let i=0;i<=500;i++){let t=i/500;let f=num('xs')*Math.pow(Math.max(num('xe')/Math.max(num('xs'),0.01),1.001),t);let val=Math.max(yb,Math.min(yt,fn(f)));let x=pad.l+t*pw,y=pad.t+(yt-val)/(yt-yb)*ph;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke()}if($('s21').checked){ctx.strokeStyle='#63c7ff';ctx.lineWidth=2;plot(s21)}if($('s11').checked){ctx.strokeStyle='#ffd66b';ctx.lineWidth=2;plot(s11)}}
+$('type').onchange=()=>{state.type=$('type').value;draw()};$('order').onchange=draw;['pass','reject','att','z1','z2','xs','xe','yb','yt'].forEach(id=>$(id).addEventListener('input',draw));$('s21').onchange=drawChart;$('s11').onchange=drawChart;$('calc').onclick=draw;$('reset').onclick=()=>{location.reload()};window.addEventListener('resize',drawChart);draw();
+</script>
+</body></html>
