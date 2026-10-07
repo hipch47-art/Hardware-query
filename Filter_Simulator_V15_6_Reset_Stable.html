@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LC Filter Simulator V15.6 Reset Stable</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit} .wrap{max-width:1100px;margin:auto;padding:14px}.card{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 14px #00000010}.title{font-size:22px;font-weight:800}.sub{color:#687386;font-size:13px;margin-top:4px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field label{display:block;font-size:13px;color:#697586;margin-bottom:5px}.field input,.field select{width:100%;height:46px;border:1px solid #cbd3dd;border-radius:11px;padding:0 12px;background:#fff}.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:800;background:#256eb5;color:#fff}.btn.secondary{background:#e9edf2;color:#17202a}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.checks{display:flex;gap:18px;align-items:center}.checks label{font-weight:700}.note{font-size:13px;color:#697586;line-height:1.55}.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#edf3fa;color:#235a8d;font-size:12px;font-weight:800}.topology{overflow-x:auto;border:1px solid #e1e5eb;border-radius:14px;background:#fff}.topology svg{display:block;min-width:760px;width:100%;height:auto}.status{font-size:13px;color:#51606f}.warning{background:#fff8e7;border:1px solid #f1d48a;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.5}.chartbox{background:#0e1218;border-radius:14px;padding:10px}.chartbox canvas{width:100%;height:320px;display:block;touch-action:none;cursor:crosshair}.markerInfo{margin:6px 4px 0;color:#e9eef5;font-size:13px;font-weight:700;min-height:20px}.legend{display:flex;gap:18px;font-size:13px;margin:7px 4px 0;color:#e9eef5}.dot{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:5px}.manual{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.manual .m{border:1px solid #e1e5eb;border-radius:12px;padding:10px}.mhead{font-weight:800;margin-bottom:7px}.mrow{display:grid;grid-template-columns:1fr 86px 34px 34px;gap:5px;align-items:center;margin:5px 0}.mrow input{width:100%;height:36px;border:1px solid #cbd3dd;border-radius:8px;padding:0 7px}.pm{height:36px;border:1px solid #cbd3dd;border-radius:8px;background:#f7f8fa}.small{font-size:12px;color:#697586}.manual input:disabled{background:#eef1f4;color:#7b8490;border-color:#d7dde4}.manual input:disabled+button,.manual input:disabled+button+button{opacity:.35;pointer-events:none}.btn.active{background:#1d5d96}.error{color:#b42318;font-weight:800}@media(max-width:700px){.grid,.manual{grid-template-columns:1fr}.title{font-size:20px}.mrow{grid-template-columns:1fr 90px 34px 34px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+ <div class="title">LC Filter Simulator <span class="badge">V15.6 Reset Stable</span></div>
+ <div class="sub">LPF = Elliptic　｜　HPF = Inverse Chebyshev</div>
+</div>
+<div class="card">
+ <div class="grid">
+  <div class="field"><label>Filter Type</label><select id="type"><option>LPF</option><option>HPF</option></select></div>
+  <div class="field"><label>Order</label><select id="order"><option value="auto">Auto</option><option>1</option><option>3</option><option>5</option><option>7</option><option>9</option></select></div>
+  <div class="field"><label>Pass Frequency Start (MHz)</label><input id="passStart" type="number" value="5" step="0.1"></div>
+  <div class="field"><label>Pass Frequency End (MHz)</label><input id="passEnd" type="number" value="85" step="0.1"></div>
+  <div class="field"><label>Rejection Frequency Start (MHz)</label><input id="rejectStart" type="number" value="108" step="0.1"></div>
+  <div class="field"><label>Rejection Frequency End (MHz)</label><input id="rejectEnd" type="number" value="1218" step="1"></div>
+  <div class="field"><label>Rejection Attenuation (dB)</label><input id="att" type="number" value="50" step="0.1"></div>
+  <div class="field"><label>Port 1 Z (Ω)</label><input id="z1" type="number" value="75" step="1"></div>
+  <div class="field"><label>Port 2 Z (Ω)</label><input id="z2" type="number" value="75" step="1"></div>
+  <div class="field"><label>X Start (MHz)</label><input id="xs" type="number" value="1" step="0.1"></div>
+  <div class="field"><label>X End (MHz)</label><input id="xe" type="number" value="1218" step="1"></div>
+  <div class="field"><label>Y Bottom (dB)</label><input id="yb" type="number" value="-80" step="1"></div>
+  <div class="field"><label>Y Top (dB)</label><input id="yt" type="number" value="5" step="1"></div>
+ </div>
+ <div class="row" style="margin-top:12px">
+  <button type="button" class="btn" id="generate">Generate</button>
+  <button type="button" class="btn secondary" id="manualBtn">Manual</button>
+  <button type="button" class="btn secondary" id="resetBtn" aria-label="Reset filter simulator">Reset</button>
+  <div class="checks"><label><input id="s21" type="checkbox" checked> S21</label><label><input id="s11" type="checkbox" checked> S11</label></div>
+ </div>
+ <div class="note" style="margin-top:10px">Generate：依 Passband / Rejection Band / Attenuation 與指定 Order 計算元件值並鎖定；Manual：解除元件值鎖定後可調整。 L ≤ 680 nH、C ≤ 200 pF。</div>
+</div>
+<div class="card">
+ <div class="row"><div class="title" id="designTitle">LPF — Elliptic</div><div class="badge" id="orderBadge">Order 5</div></div>
+ <div class="topology" style="margin-top:12px"><svg id="svg" viewBox="0 0 1100 470" preserveAspectRatio="xMinYMin meet"></svg></div>
+ <div class="status" id="status" style="margin-top:9px"></div>
+</div>
+<div class="card">
+ <div class="title">Simulation</div>
+ <div class="warning">V15.4：Generate 必須同時滿足整段 Passband（S21 loss ≤ 3 dB）與整段 Rejection Band（S21 ≤ −Attenuation）；Manual 解鎖後調整。</div>
+ <div class="chartbox" style="margin-top:10px"><canvas id="chart" width="1000" height="320"></canvas><div id="markerInfo" class="markerInfo">Marker：點擊曲線顯示頻率、S21、S11</div><div class="legend"><span><i class="dot" style="background:#63c7ff"></i>S21</span><span><i class="dot" style="background:#ffd66b"></i>S11</span></div></div>
+</div>
+<div class="card">
+ <div class="title">Component Values</div>
+ <div class="small" style="margin:4px 0 10px">Generate 後元件值預設鎖定；按 Manual 後即可直接修改，± 每次 1 nH / 1 pF。設計限制：L ≤ 680 nH、C ≤ 200 pF。</div>
+ <div class="manual" id="manual"></div>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let state={type:'LPF',order:5,parts:[],designed:false,error:''};
+function num(id){return Number($(id).value)}
+function bandSpec(){return {ps:num('passStart'),pe:num('passEnd'),rs:num('rejectStart'),re:num('rejectEnd'),att:num('att')}}
+function validBands(){let b=bandSpec(); if(!(b.ps>0&&b.pe>b.ps&&b.rs>0&&b.re>b.rs&&b.att>0))return false; return state.type==='LPF'?(b.pe<b.rs):(b.re<b.ps)}
+function effectiveOrder(){let o=$("order").value;if(o==='auto'){for(const n of [3,5,7,9]){const rr=solveDesign(n);if(rr.ok)return n;}return 9}return Number(o)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function wire(x1,y1,x2,y2){return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#28323f" stroke-width="3" stroke-linecap="round"/>`}
+function ground(x,y){return `${wire(x,y-42,x,y)}<line x1="${x-24}" y1="${y}" x2="${x+24}" y2="${y}" stroke="#28323f" stroke-width="3"/><line x1="${x-16}" y1="${y+8}" x2="${x+16}" y2="${y+8}" stroke="#28323f" stroke-width="3"/><line x1="${x-8}" y1="${y+16}" x2="${x+8}" y2="${y+16}" stroke="#28323f" stroke-width="3"/>`}
+function capVertical(x,y,label,show=true){let p1=y+18,p2=p1+16,bot=p2+34;return `${wire(x,y,x,p1)}<line x1="${x-18}" y1="${p1}" x2="${x+18}" y2="${p1}" stroke="#2f6fa8" stroke-width="4"/><line x1="${x-18}" y1="${p2}" x2="${x+18}" y2="${p2}" stroke="#2f6fa8" stroke-width="4"/>${wire(x,p2,x,bot)}${show?`<text x="${x+26}" y="${p1+8}" font-size="13" font-weight="700">${esc(label)}</text>`:''}${ground(x,bot+42)}`}
+function capSeries(x,y,label,show=true){return `${wire(x-42,y,x-14,y)}<line x1="${x-14}" y1="${y-18}" x2="${x-14}" y2="${y+18}" stroke="#2f6fa8" stroke-width="4"/><line x1="${x+2}" y1="${y-18}" x2="${x+2}" y2="${y+18}" stroke="#2f6fa8" stroke-width="4"/>${wire(x+2,y,x+42,y)}${show?`<text x="${x-6}" y="${y-28}" text-anchor="middle" font-size="13" font-weight="700">${esc(label)}</text>`:''}`}
+function indSeries(x,y,label,show=true){let path=`M ${x-42} ${y} q 10 -24 20 0 q 10 -24 20 0 q 10 -24 20 0 q 10 -24 20 0`;return `${wire(x-42,y,x-42,y)}<path d="${path}" fill="none" stroke="#8b6b22" stroke-width="4"/><circle cx="${x-42}" cy="${y}" r="2" fill="#28323f"/><circle cx="${x+38}" cy="${y}" r="2" fill="#28323f"/>${wire(x+38,y,x+42,y)}${show?`<text x="${x}" y="${y-28}" text-anchor="middle" font-size="13" font-weight="700">${esc(label)}</text>`:''}`}
+function lpfCellBetween(x1,x2,y,cell){let mid=(x1+x2)/2;let out=indSeries(mid,y,cell.lRef,false);out+=capSeries(mid,y-70,cell.cRef,false);out+=wire(x1,y,x1,y-70)+wire(x2,y,x2,y-70);return out}
+function svgText(x,y,text,extra=''){return `<text x="${x}" y="${y}" ${extra}>${esc(text)}</text>`}
+function capV(x,y,ref){let p1=y+18,p2=p1+16,b=p2+36;return wire(x,y,x,p1)+`<line x1="${x-18}" y1="${p1}" x2="${x+18}" y2="${p1}" stroke="#2f6fa8" stroke-width="4"/><line x1="${x-18}" y1="${p2}" x2="${x+18}" y2="${p2}" stroke="#2f6fa8" stroke-width="4"/>`+wire(x,p2,x,b)+ground(x,b+42)+svgText(x+25,p1+8,ref,'font-size="13" font-weight="700"')}
+function capH(x,y,ref){return wire(x-42,y,x-14,y)+`<line x1="${x-14}" y1="${y-18}" x2="${x-14}" y2="${y+18}" stroke="#2f6fa8" stroke-width="4"/><line x1="${x+2}" y1="${y-18}" x2="${x+2}" y2="${y+18}" stroke="#2f6fa8" stroke-width="4"/>`+wire(x+2,y,x+42,y)+svgText(x-6,y-28,ref,'text-anchor="middle" font-size="13" font-weight="700"')}
+function indH(x,y,ref){let path=`M ${x-42} ${y} q 10 -24 20 0 q 10 -24 20 0 q 10 -24 20 0 q 10 -24 20 0`;return wire(x-52,y,x-42,y)+`<path d="${path}" fill="none" stroke="#8b6b22" stroke-width="4"/>`+wire(x+38,y,x+52,y)+svgText(x,y-28,ref,'text-anchor="middle" font-size="13" font-weight="700"')}
+function drawLPF(n){let svg=$('svg'),k=(n-1)/2,w=Math.max(1000,190*k+250),h=610,y=290,left=110,right=w-90,step=(right-left)/(k+1),out=`<rect x="0" y="0" width="${w}" height="${h}" fill="#fff"/>`;out+=svgText(45,38,`Elliptic Lowpass — ${n}th Order`,'font-size="24" font-weight="800"')+svgText(45,64,'LPF simulation','font-size="14" fill="#697586"');let nodes=[];for(let i=0;i<=k;i++)nodes.push(left+i*step);out+=wire(35,y,left,y)+svgText(18,y-12,'PORT 1','font-size="13" font-weight="700"');for(let i=0;i<=k;i++){let sh=state.parts.shunts?.[i];out+=capV(nodes[i],y,sh?.ref||`C${1+i*3}`);if(i<k){let cell=state.parts.cells[i],mid=(nodes[i]+nodes[i+1])/2;out+=wire(nodes[i],y,mid-52,y)+indH(mid,y,cell?.lRef||`L${i+1}`)+wire(mid+52,y,nodes[i+1],y);let cy=y-82,px1=mid-9,px2=mid+9;out+=wire(nodes[i],y,nodes[i],cy)+wire(nodes[i+1],y,nodes[i+1],cy)+wire(nodes[i],cy,px1-18,cy)+`<line x1="${px1}" y1="${cy-18}" x2="${px1}" y2="${cy+18}" stroke="#2f6fa8" stroke-width="4"/><line x1="${px2}" y1="${cy-18}" x2="${px2}" y2="${cy+18}" stroke="#2f6fa8" stroke-width="4"/>`+wire(px2+18,cy,nodes[i+1],cy)+wire(px1-18,cy,px1,cy)+wire(px2,cy,px2+18,cy)+svgText(mid,cy-26,cell?.cRef||`C${2+i*3}`,'text-anchor="middle" font-size="13" font-weight="700"')}}out+=wire(nodes[k],y,right,y)+svgText(right+8,y-12,'PORT 2','font-size="13" font-weight="700"');svg.innerHTML=out;svg.setAttribute('viewBox',`0 0 ${w} ${h}`)}
+function drawHPF(n){let svg=$('svg'),series=(n+1)/2,branches=(n-1)/2,w=Math.max(1000,190*series+180),h=610,y=280,left=110,right=w-90,step=(right-left)/series,out=`<rect x="0" y="0" width="${w}" height="${h}" fill="#fff"/>`;out+=svgText(45,38,`Inverse Chebyshev Highpass — ${n}th Order`,'font-size="24" font-weight="800"')+svgText(45,64,'HPF simulation','font-size="14" fill="#697586"');out+=wire(35,y,left,y)+svgText(18,y-12,'PORT 1','font-size="13" font-weight="700"');for(let k=0;k<series;k++){let nodeL=left+k*step,nodeR=left+(k+1)*step,cx=(nodeL+nodeR)/2,p=state.parts[k*2];out+=wire(nodeL,y,cx-42,y)+capH(cx,y,p?.ref||`C${2*k+1}`)+wire(cx+42,y,nodeR,y);if(k<branches){let b=state.parts[k*2+1],bx=nodeR,top=y+18,p1=top,p2=p1+16,mid=p2+38;out+=wire(bx,y,bx,p1)+`<line x1="${bx-18}" y1="${p1}" x2="${bx+18}" y2="${p1}" stroke="#2f6fa8" stroke-width="4"/><line x1="${bx-18}" y1="${p2}" x2="${bx+18}" y2="${p2}" stroke="#2f6fa8" stroke-width="4"/>`+wire(bx,p2,bx,mid)+`<path d="M ${bx} ${mid} q -22 10 0 20 q -22 10 0 20 q -22 10 0 20" fill="none" stroke="#8b6b22" stroke-width="4"/>`+wire(bx,mid+60,bx,mid+74)+ground(bx,mid+116)+svgText(bx+25,p1+8,b?.cRef||`C${2*k+2}`,'font-size="13" font-weight="700"')+svgText(bx+25,mid+38,b?.lRef||`L${2*k+2}`,'font-size="13" font-weight="700"')}}out+=wire(right,y,right+55,y)+svgText(right+62,y-12,'PORT 2','font-size="13" font-weight="700"');svg.innerHTML=out;svg.setAttribute('viewBox',`0 0 ${w} ${h}`)}
+function fmt(v){let n=Number(v);if(!Number.isFinite(n))return 'ERR';if(Math.abs(n)>=100)return n.toFixed(1).replace(/\.0$/,'');if(Math.abs(n)>=10)return n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');return n.toFixed(3).replace(/0+$/,'').replace(/\.$/,'')}
+function lpftopo(n,vals){let cells=(n-1)/2,parts=[],shunts=[],sh0=vals?.[0]??39;shunts.push({ref:'C1',v:sh0});for(let i=0;i<cells;i++){let q=vals?vals[1+i*3]:150,cp=vals?vals[2+i*3]:10,sh=vals?vals[3+i*3]:30;parts.push({lRef:`L${i+1}`,l:q,cRef:`C${2+i*2}`,c:cp,shRef:`C${3+i*2}`,sh:sh});shunts.push({ref:`C${3+i*2}`,v:sh})}return {shunts,cells:parts}}
+function hpftopo(n,vals){let series=(n+1)/2,branches=(n-1)/2,a=[];for(let k=0;k<series;k++){let base=k*3; a.push({kind:'Cser',ref:`C${2*k+1}`,v:vals?vals[base]:15,unit:'pF'});if(k<branches)a.push({kind:'branch',cRef:`C${2*k+2}`,lRef:`L${2*k+2}`,cv:vals?vals[base+1]:180,lv:vals?vals[base+2]:68})}return a}
+function cAdd(a,b){return{re:a.re+b.re,im:a.im+b.im}}function cMul(a,b){return{re:a.re*b.re-a.im*b.im,im:a.re*b.im+a.im*b.re}}function cDiv(a,b){const d=b.re*b.re+b.im*b.im;if(d<1e-30)return{re:1e12,im:0};return{re:(a.re*b.re+a.im*b.im)/d,im:(a.im*b.re-a.re*b.im)/d}}function cAbs(a){return Math.hypot(a.re,a.im)}function seriesABCD(Z){return{A:{re:1,im:0},B:Z,C:{re:0,im:0},D:{re:1,im:0}}}function shuntABCD(Y){return{A:{re:1,im:0},B:{re:0,im:0},C:Y,D:{re:1,im:0}}}function abcdMul(m,n){return{A:cAdd(cMul(m.A,n.A),cMul(m.B,n.C)),B:cAdd(cMul(m.A,n.B),cMul(m.B,n.D)),C:cAdd(cMul(m.C,n.A),cMul(m.D,n.C)),D:cAdd(cMul(m.C,n.B),cMul(m.D,n.D))}}function zL(f,nH){return{re:0,im:2*Math.PI*f*1e6*nH*1e-9}}function zC(f,pF){return{re:0,im:-1/(2*Math.PI*f*1e6*pF*1e-12)}}function parallelZ(a,b){return cDiv(cMul(a,b),cAdd(a,b))}function yC(f,pF){return cDiv({re:1,im:0},zC(f,pF))}function ySeriesCL(f,c,l){return cDiv({re:1,im:0},cAdd(zC(f,c),zL(f,l)))}
+function responseAt(f){let M={A:{re:1,im:0},B:{re:0,im:0},C:{re:0,im:0},D:{re:1,im:0}};if(state.type==='LPF'){M=abcdMul(M,shuntABCD(yC(f,state.parts.shunts[0].v)));for(let i=0;i<state.parts.cells.length;i++){let p=state.parts.cells[i],z=parallelZ(zL(f,p.l),zC(f,p.c));M=abcdMul(M,seriesABCD(z));M=abcdMul(M,shuntABCD(yC(f,state.parts.shunts[i+1].v)));}}else{for(const p of state.parts){if(p.kind==='Cser')M=abcdMul(M,seriesABCD(zC(f,p.v)));else M=abcdMul(M,shuntABCD(ySeriesCL(f,p.cv,p.lv)));}}let z1=Math.max(.01,num('z1')),z2=Math.max(.01,num('z2'));let den=cAdd(cAdd(M.A,{re:M.B.re/z2,im:M.B.im/z2}),cAdd({re:M.C.re*z1,im:M.C.im*z1},M.D));let s21=cDiv({re:2*Math.sqrt(z1/z2),im:0},den),s11=cDiv(cAdd(cAdd(M.A,{re:M.B.re/z2,im:M.B.im/z2}),{re:-M.C.re*z1-M.D.re,im:-M.C.im*z1-M.D.im}),den);return{s21:20*Math.log10(Math.max(cAbs(s21),1e-12)),s11:20*Math.log10(Math.max(cAbs(s11),1e-12))}}
+function sampleBand(a,b,count,log=true){let out=[];if(count<=1)return[a];for(let i=0;i<count;i++){let t=i/(count-1);out.push(log?a*Math.pow(b/a,t):a+(b-a)*t)}return out}
+function metric(){let b=bandSpec();if(!validBands())return{ok:false,maxPassLoss:Infinity,worstReject:Infinity,passMin:-Infinity,passMax:Infinity,rejectWorst:Infinity};let passFs=sampleBand(b.ps,b.pe,81,true),rejFs=sampleBand(b.rs,b.re,161,true);let passVals=passFs.map(responseAt).map(x=>x.s21),rejVals=rejFs.map(responseAt).map(x=>x.s21);if(passVals.some(v=>!Number.isFinite(v))||rejVals.some(v=>!Number.isFinite(v)))return{ok:false,maxPassLoss:Infinity,worstReject:Infinity};let maxPassLoss=Math.max(...passVals.map(v=>-v));let worstReject=Math.max(...rejVals);let passMin=Math.min(...passVals),passMax=Math.max(...passVals);let ok=maxPassLoss<=3.0+1e-9&&worstReject<=-b.att+1e-9;return{ok,maxPassLoss,worstReject,passMin,passMax,rejectWorst:worstReject,passStart:b.ps,passEnd:b.pe,rejectStart:b.rs,rejectEnd:b.re,att:b.att}}
+function seedDesign(n){let b=bandSpec(),scaleLPF=85/Math.max(b.pe,0.1),scaleHPF=108/Math.max(b.ps,0.1);if(state.type==='LPF'){const base={3:[39,150,10,30],5:[39,150,10,30,120,18,39],7:[39,150,10,30,120,18,39,150,1.5,27],9:[39,150,10,30,120,18,39,150,1.5,27,150,1.5,22]};let out=(base[n]||base[9]).slice();return out.map(v=>v*scaleLPF)}else{const base={3:[15,180,68,15],5:[15,180,68,15,36,100,18],7:[15,180,68,15,36,100,18,33,120,15],9:[15,180,68,15,36,100,18,33,120,15,39,390,15]};let out=(base[n]||base[9]).slice();return out.map(v=>v*scaleHPF)}}
+function buildFromArray(n,v){return state.type==='LPF'?lpftopo(n,v):hpftopo(n,v)}
+function boundsFor(i,n){if(state.type==='LPF'){return i===0||((i-3)%3===0)?[0.1,200]:((i-1)%3===0?[0.1,680]:[0.1,200])}let pos=i%3;return pos===0?[0.1,200]:(pos===1?[0.1,200]:[0.1,680])}
+function objective(v,n){
+  for(let i=0;i<v.length;i++){
+    let [lo,hi]=boundsFor(i,n);
+    if(v[i]<lo||v[i]>hi)return [2,1e6+Math.abs(v[i]-Math.min(hi,Math.max(lo,v[i]))),1e6,1e6];
+  }
+  state.parts=buildFromArray(n,v);
+  let m=metric();
+  if(!Number.isFinite(m.maxPassLoss)||!Number.isFinite(m.worstReject))return [2,1e9,1e9,1e9];
+  if(m.ok){
+    // Feasible designs are always preferred. Then minimize passband loss,
+    // then maximize rejection attenuation (more negative worstReject),
+    // then prefer smaller normalized component values.
+    let comp=0;
+    for(let i=0;i<v.length;i++){let [lo,hi]=boundsFor(i,n);comp+=(v[i]-lo)/(hi-lo)}
+    return [0,m.maxPassLoss,m.worstReject,comp];
+  }
+  // For infeasible candidates, minimize normalized specification violation.
+  let passV=Math.max(0,m.maxPassLoss-3);
+  let rejV=Math.max(0,m.worstReject+bandSpec().att);
+  let violation=passV/3+rejV/Math.max(1,bandSpec().att);
+  return [1,violation,m.maxPassLoss,m.worstReject];
+}
+function objectiveBetter(a,b){
+  if(!b)return true;
+  for(let i=0;i<a.length;i++){if(Math.abs(a[i]-b[i])>1e-9)return a[i]<b[i];}
+  return false;
+}
+function solveDesign(n){
+  if(!validBands())return{ok:false,metric:metric(),reason:'invalid-band'};
+  let seed=seedDesign(n), starts=[seed];
+  // Deterministic starts: around the hardware-informed seed and its bounded variants.
+  const mults=[0.68,0.82,1.18,1.42];
+  for(let k=0;k<mults.length;k++){
+    starts.push(seed.map((v,i)=>{let [lo,hi]=boundsFor(i,n);let mult=mults[(k+i)%mults.length];return Math.max(lo,Math.min(hi,v*mult));}));
+  }
+  let global=null;
+  for(const initial of starts){
+    let v=initial.slice(),best=objective(v,n);
+    for(let pass=0;pass<16;pass++){
+      let changed=false;
+      // Search multiplicative neighbourhood; this works well across nH/pF ranges.
+      const scales=[0.62,0.78,0.90,0.96,1.04,1.10,1.28,1.62];
+      for(let i=0;i<v.length;i++){
+        let old=v[i],[lo,hi]=boundsFor(i,n);
+        let localBest=v,localObj=best;
+        for(const q of scales){
+          let nv=Math.max(lo,Math.min(hi,old*q));
+          if(Math.abs(nv-old)<1e-12)continue;
+          let cand=v.slice();cand[i]=nv;
+          let obj=objective(cand,n);
+          if(objectiveBetter(obj,localObj)){localBest=cand;localObj=obj;}
+        }
+        if(localBest!==v){v=localBest;best=localObj;changed=true;}
+      }
+      if(!changed)break;
+    }
+    state.parts=buildFromArray(n,v);
+    let mm=metric();
+    if(!global||objectiveBetter(best,global.objective))global={v:v.slice(),objective:best,metric:mm};
+  }
+  state.parts=buildFromArray(n,global.v);
+  let m=metric();
+  return{ok:m.ok,parts:state.parts,metric:m,score:global.objective};
+}
+function renderManual(){let el=$('manual');let locked=!state.manualUnlocked;let dis=locked?' disabled':'';let rows=[];if(state.type==='LPF'){state.parts.shunts.forEach((p,i)=>{rows.push(`<div class="m"><div class="mhead">${p.ref}</div><div class="mrow"><span>${p.ref} (pF)</span><input data-kind="lpf-sh" data-i="${i}" type="number" value="${fmt(p.v)}" step="1"${dis}><button class="pm" data-d="-1">−</button><button class="pm" data-d="1">+</button></div></div>`)});state.parts.cells.forEach((c,i)=>{rows.push(`<div class="m"><div class="mhead">${c.lRef} ∥ ${c.cRef}</div><div class="mrow"><span>${c.lRef} (nH)</span><input data-kind="lpf-l" data-i="${i}" type="number" value="${fmt(c.l)}" step="1"${dis}><button class="pm" data-d="-1">−</button><button class="pm" data-d="1">+</button></div><div class="mrow"><span>${c.cRef} (pF)</span><input data-kind="lpf-c" data-i="${i}" type="number" value="${fmt(c.c)}" step="1"${dis}><button class="pm" data-d="-1">−</button><button class="pm" data-d="1">+</button></div></div>`)});}else{state.parts.forEach((p,i)=>{if(p.kind==='Cser')rows.push(`<div class="m"><div class="mhead">${p.ref}</div><div class="mrow"><span>${p.ref} (pF)</span><input data-kind="hp-c" data-i="${i}" type="number" value="${fmt(p.v)}" step="1"${dis}><button class="pm" data-d="-1">−</button><button class="pm" data-d="1">+</button></div></div>`);else rows.push(`<div class="m"><div class="mhead">${p.cRef} / ${p.lRef}</div><div class="mrow"><span>${p.cRef} (pF)</span><input data-kind="hp-cb" data-i="${i}" type="number" value="${fmt(p.cv)}" step="1"${dis}><button class="pm" data-d="-1">−</button><button class="pm" data-d="1">+</button></div><div class="mrow"><span>${p.lRef} (nH)</span><input data-kind="hp-lb" data-i="${i}" type="number" value="${fmt(p.lv)}" step="1"${dis}><button class="pm" data-d="-1">−</button><button class="pm" data-d="1">+</button></div></div>`)})}el.innerHTML=rows.join('');el.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{applyManual(inp,Number(inp.value));drawSchematicOnly();drawChart()}));el.querySelectorAll('.pm').forEach(btn=>btn.addEventListener('click',()=>{if(locked)return;let inp=btn.parentElement.querySelector('input');inp.value=String(Number(inp.value)+(Number(btn.dataset.d)||0));inp.dispatchEvent(new Event('input',{bubbles:true}))}))}
+function applyManual(inp,v){if(!Number.isFinite(v)||v<=0)return;let i=Number(inp.dataset.i),k=inp.dataset.kind;if(state.type==='LPF'){if(k==='lpf-sh')state.parts.shunts[i].v=v;else if(k==='lpf-l')state.parts.cells[i].l=v;else if(k==='lpf-c')state.parts.cells[i].c=v;}else{let p=state.parts[i];if(!p)return;if(k==='hp-c')p.v=v;else if(k==='hp-cb')p.cv=v;else if(k==='hp-lb')p.lv=v}state.designed=false;$('status').textContent='Manual Tune updated · S21/S11 recalculated'}
+function drawSchematicOnly(){if(state.type==='LPF')drawLPF(state.order);else drawHPF(state.order)}
+function chartMetrics(){let xs=Math.max(.001,num('xs')),xe=Math.max(.001,num('xe'));return{xs,xe,yb:num('yb'),yt:num('yt')}}
+function drawChart(){let c=$('chart'),rect=c.getBoundingClientRect(),w=Math.max(320,rect.width||c.clientWidth||900),h=320,dpr=Math.min(2,window.devicePixelRatio||1);c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);let ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#0e1218';ctx.fillRect(0,0,w,h);let pad={l:62,r:18,t:24,b:48},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b,m=chartMetrics();state.chartGeom={w,h,pad,pw,ph,m,dpr};if(!(m.xe>m.xs)||!(m.yt>m.yb)){ctx.fillStyle='#ff8b8b';ctx.font='14px sans-serif';ctx.fillText('ERROR: X/Y range invalid',pad.l,pad.t+20);return}ctx.strokeStyle='#293241';ctx.lineWidth=1;ctx.font='11px sans-serif';ctx.fillStyle='#aeb8c5';for(let i=0;i<=5;i++){let y=pad.t+i*ph/5,val=m.yt-i*(m.yt-m.yb)/5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+pw,y);ctx.stroke();ctx.fillText(`${val.toFixed(0)} dB`,5,y+4)}for(let i=0;i<=6;i++){let t=i/6,x=pad.l+t*pw,f=m.xs*Math.pow(m.xe/m.xs,t);ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+ph);ctx.stroke();let label=f>=100?`${f.toFixed(0)} MHz`:f>=10?`${f.toFixed(1)} MHz`:`${f.toFixed(2)} MHz`;ctx.fillText(label,Math.max(0,x-25),h-18)}function pointFor(t,val){let cl=Math.max(m.yb,Math.min(m.yt,val));return{x:pad.l+t*pw,y:pad.t+(m.yt-cl)/(m.yt-m.yb)*ph}}function plot(key,col){ctx.beginPath();let trace=[];for(let i=0;i<=1000;i++){let t=i/1000,f=m.xs*Math.pow(m.xe/m.xs,t),val=responseAt(f)[key],pt=pointFor(t,val);trace.push({f,val,x:pt.x,y:pt.y});i?ctx.lineTo(pt.x,pt.y):ctx.moveTo(pt.x,pt.y)}ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.stroke();return trace}state.traces={};if($('s21').checked)state.traces.s21=plot('s21','#63c7ff');if($('s11').checked)state.traces.s11=plot('s11','#ffd66b');state.chartBase=ctx.getImageData(0,0,c.width,c.height);drawMarker();}
+function drawMarker(){let c=$('chart'),ctx=c.getContext('2d'),g=state.chartGeom;if(!g||!state.chartBase)return;ctx.setTransform(1,0,0,1,0,0);ctx.putImageData(state.chartBase,0,0);ctx.setTransform(g.dpr,0,0,g.dpr,0,0);if(!state.markerF){$('markerInfo').textContent='Marker：拖曳或點擊曲線顯示頻率、S21、S11';return}let t=Math.log(state.markerF/g.m.xs)/Math.log(g.m.xe/g.m.xs);if(t<0||t>1)return;let rp=responseAt(state.markerF),which=$('s21').checked?'s21':'s11',trace=state.traces[which]||state.traces.s21||state.traces.s11,idx=Math.max(0,Math.min(1000,Math.round(t*1000))),pt=trace?.[idx];if(!pt)return;ctx.strokeStyle='#fff';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(pt.x,g.pad.t);ctx.lineTo(pt.x,g.pad.t+g.ph);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(pt.x,pt.y,5,0,Math.PI*2);ctx.fill();$('markerInfo').textContent=`Marker：${state.markerF.toFixed(3)} MHz  |  S21 ${rp.s21.toFixed(2)} dB  |  S11 ${rp.s11.toFixed(2)} dB`}
+function handleChartPointer(e){let c=$('chart'),r=c.getBoundingClientRect(),x=e.clientX-r.left,g=state.chartGeom;if(!g)return;let t=Math.max(0,Math.min(1,(x-g.pad.l)/g.pw));state.markerF=g.m.xs*Math.pow(g.m.xe/g.m.xs,t);drawMarker()}
+function handleChartMove(e){if(!state.dragMarker)return;handleChartPointer(e)}
+function draw(){let n=effectiveOrder();state.order=n;$('orderBadge').textContent='Order '+n;$('designTitle').textContent=state.type==='LPF'?'LPF — Elliptic':'HPF — Inverse Chebyshev';let b=bandSpec();state.error='';if(!validBands()){state.error='Invalid frequency relationship';$('status').innerHTML='<span class="error">ERROR: 頻率設定不符合 LPF / HPF 關係，請確認 Passband 與 Rejection Band 不重疊。</span>';state.parts=buildFromArray(n,seedDesign(n));if(state.type==='LPF')drawLPF(n);else drawHPF(n);renderManual();drawChart();return}let result=solveDesign(n);if(result.ok){state.designed=true;state.parts=result.parts;$('status').textContent=`Calculated · Order ${n} · Passband max loss ${fmt(result.metric.maxPassLoss)} dB · Rejection worst ${fmt(result.metric.worstReject)} dB`;  }else{$('status').innerHTML=`<span class="error">ERROR: Order ${n} 目前無法同時達成規格。Passband / Rejection 全頻帶檢查未通過；目前僅顯示此 Order 的參考電路與曲線。</span>`;state.parts=buildFromArray(n,seedDesign(n));state.designed=false}if(state.type==='LPF')drawLPF(n);else drawHPF(n);renderManual();drawChart()}
+function generate(){state.manualUnlocked=false;$('manualBtn').classList.remove('active');let wasAuto=$('order').value==='auto';draw();if(state.error)return;if(wasAuto){$('order').value=String(state.order)}const m=metric();if(!m.ok){state.designed=false;$('status').innerHTML=`<span class="error">ERROR: Order ${state.order} 無法符合規格。Passband 最大 Loss ${fmt(m.maxPassLoss)} dB（要求 ≤ 3 dB）；Rejection 最差 ${fmt(m.worstReject)} dB（要求 ≤ -${fmt(m.att)} dB）。請提高 Order 或調整規格。</span>`;return}$('status').innerHTML=`<span class="ok">Generate 完成 · Order ${state.order} · Passband ${fmt(m.maxPassLoss)} dB · Rejection ${fmt(m.worstReject)} dB · 元件值已鎖定</span>`}
+function manualMode(){state.manualUnlocked=true;$('manualBtn').classList.add('active');renderManual();$('status').textContent='Manual mode · 元件值已解鎖，可調整 L / C';}
+$('type').onchange=()=>{state.type=$('type').value;state.manualUnlocked=false;if(state.type==='LPF'){$('passStart').value=5;$('passEnd').value=85;$('rejectStart').value=108;$('rejectEnd').value=1218;}else{$('passStart').value=108;$('passEnd').value=1218;$('rejectStart').value=5;$('rejectEnd').value=85;}safeDraw()};$('order').onchange=()=>{state.manualUnlocked=false;safeDraw()};$('generate').onclick=generate;$('manualBtn').onclick=manualMode;function resetSimulator(e){if(e){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();}const y=window.scrollY;state.type='LPF';state.manualUnlocked=false;state.designed=false;state.markerF=null;$('type').value='LPF';$('order').value='auto';$('passStart').value=5;$('passEnd').value=85;$('rejectStart').value=108;$('rejectEnd').value=1218;$('att').value=50;$('z1').value=75;$('z2').value=75;$('xs').value=1;$('xe').value=1218;$('yb').value=-80;$('yt').value=5;$('s21').checked=true;$('s11').checked=true;safeDraw();requestAnimationFrame(()=>window.scrollTo(0,y));return false}function safeDraw(){try{draw()}catch(err){console.error('Filter draw error',err);}}const resetBtn=$('resetBtn');resetBtn.addEventListener('click',resetSimulator,true);resetBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation()},true);resetBtn.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation()},true);['passStart','passEnd','rejectStart','rejectEnd','att','z1','z2','xs','xe','yb','yt'].forEach(id=>{$(id).addEventListener('input',drawChart);$(id).addEventListener('change',drawChart)});$('s21').onchange=drawChart;$('s11').onchange=drawChart;let markerRAF=0;$('chart').addEventListener('pointerdown',e=>{state.dragMarker=true;$('chart').setPointerCapture?.(e.pointerId);handleChartPointer(e)});$('chart').addEventListener('pointermove',e=>{if(state.dragMarker){if(!markerRAF){markerRAF=requestAnimationFrame(()=>{markerRAF=0;handleChartMove(e)})}}});$('chart').addEventListener('pointerup',e=>{state.dragMarker=false;$('chart').releasePointerCapture?.(e.pointerId);handleChartPointer(e)});$('chart').addEventListener('pointercancel',()=>state.dragMarker=false);window.addEventListener('resize',drawChart);draw();
+</script></body></html>
