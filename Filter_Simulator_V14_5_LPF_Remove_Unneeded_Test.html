@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LC Filter Simulator V14.5 Wire Connection Test</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#17202a;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit} .wrap{max-width:1100px;margin:auto;padding:14px}.card{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 14px #00000010}.title{font-size:22px;font-weight:800}.sub{color:#687386;font-size:13px;margin-top:4px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field label{display:block;font-size:13px;color:#697586;margin-bottom:5px}.field input,.field select{width:100%;height:46px;border:1px solid #cbd3dd;border-radius:11px;padding:0 12px;background:#fff}.btn{border:0;border-radius:12px;padding:12px 18px;font-weight:800;background:#256eb5;color:#fff}.btn.secondary{background:#e9edf2;color:#17202a}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.checks{display:flex;gap:18px;align-items:center}.checks label{font-weight:700}.note{font-size:13px;color:#697586;line-height:1.55}.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#edf3fa;color:#235a8d;font-size:12px;font-weight:800}.topology{overflow-x:auto;border:1px solid #e1e5eb;border-radius:14px;background:#fff}.topology svg{display:block;min-width:760px;width:100%;height:auto}.status{font-size:13px;color:#51606f}.warning{background:#fff8e7;border:1px solid #f1d48a;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.5}.chartbox{background:#0e1218;border-radius:14px;padding:10px}.chartbox canvas{width:100%;height:300px;display:block}.legend{display:flex;gap:18px;font-size:13px;margin:7px 4px 0;color:#e9eef5}.dot{display:inline-block;width:10px;height:3px;vertical-align:middle;margin-right:5px}.manual{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.manual .m{border:1px solid #e1e5eb;border-radius:12px;padding:10px}.mhead{font-weight:800;margin-bottom:7px}.mrow{display:grid;grid-template-columns:1fr 86px 34px 34px;gap:5px;align-items:center;margin:5px 0}.mrow input{width:100%;height:36px;border:1px solid #cbd3dd;border-radius:8px;padding:0 7px}.pm{height:36px;border:1px solid #cbd3dd;border-radius:8px;background:#f7f8fa}.small{font-size:12px;color:#697586}@media(max-width:700px){.grid,.manual{grid-template-columns:1fr}.title{font-size:20px}.mrow{grid-template-columns:1fr 90px 34px 34px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+ <div class="title">LC Filter Simulator <span class="badge">V14.5 Wire Connection Test</span></div>
+ <div class="sub">LPF = Elliptic　｜　HPF = Inverse Chebyshev</div>
+</div>
+<div class="card">
+ <div class="grid">
+  <div class="field"><label>Filter Type</label><select id="type"><option>LPF</option><option>HPF</option></select></div>
+  <div class="field"><label>Order</label><select id="order"><option value="auto">Auto</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div>
+  <div class="field"><label>Pass Frequency (MHz)</label><input id="pass" type="number" value="85" step="0.1"></div>
+  <div class="field"><label>Rejection Frequency (MHz)</label><input id="reject" type="number" value="108" step="0.1"></div>
+  <div class="field"><label>Rejection Attenuation (dB)</label><input id="att" type="number" value="50" step="0.1"></div>
+  <div class="field"><label>Port 1 Z (Ω)</label><input id="z1" type="number" value="75" step="1"></div>
+  <div class="field"><label>Port 2 Z (Ω)</label><input id="z2" type="number" value="75" step="1"></div>
+  <div class="field"><label>X Start (MHz)</label><input id="xs" type="number" value="1" step="0.1"></div>
+  <div class="field"><label>X End (MHz)</label><input id="xe" type="number" value="1218" step="1"></div>
+  <div class="field"><label>Y Bottom (dB)</label><input id="yb" type="number" value="-80" step="1"></div>
+  <div class="field"><label>Y Top (dB)</label><input id="yt" type="number" value="5" step="1"></div>
+ </div>
+ <div class="row" style="margin-top:12px">
+  <button class="btn" id="calc">Generate Topology</button>
+  <button class="btn secondary" id="reset">Reset</button>
+  <div class="checks"><label><input id="s21" type="checkbox" checked> S21</label><label><input id="s11" type="checkbox" checked> S11</label></div>
+ </div>
+ <div class="note" style="margin-top:10px">本版重點：LPF 依你提供的實際硬體架構建立 L∥C + Shunt C；HPF 維持獨立拓撲。LPF 目前以已核對的硬體 4 個 resonator stages 為驗證範圍。</div>
+</div>
+<div class="card">
+ <div class="row"><div class="title" id="designTitle">LPF — Elliptic</div><div class="badge" id="orderBadge">Order 5</div></div>
+ <div class="topology" style="margin-top:12px"><svg id="svg" viewBox="0 0 1100 470" preserveAspectRatio="xMinYMin meet"></svg></div>
+ <div class="status" id="status" style="margin-top:9px"></div>
+</div>
+<div class="card">
+ <div class="title">Response Preview</div>
+ <div class="warning">V14.5 本版重點是 schematic 顯示：Order 改變時拓撲同步變化，並以標準電感、電容、接地符號呈現。曲線仍屬拓撲/規格預覽，尚未宣稱為最終精確 Elliptic / Inverse-Chebyshev 係數計算。</div>
+ <div class="chartbox" style="margin-top:10px"><canvas id="chart" width="1000" height="320"></canvas><div class="legend"><span><i class="dot" style="background:#63c7ff"></i>S21</span><span><i class="dot" style="background:#ffd66b"></i>S11</span></div></div>
+</div>
+<div class="card">
+ <div class="title">Manual Tune</div>
+ <div class="small" style="margin:4px 0 10px">本版顯示由拓撲生成器建立的元件；直接修改數值可作為下一階段精算引擎的輸入。</div>
+ <div class="manual" id="manual"></div>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);let state={type:'LPF',order:5,parts:[]};
+function num(id){return Number($(id).value)}
+function effectiveOrder(){let o=$("order").value; if(o==='auto'){let p=num('pass'),r=num('reject'),a=num('att'); if(state.type==='LPF'){return Math.max(3,Math.min(10,Math.ceil(Math.log10(Math.max(1,a))/Math.log10(Math.max(1,r/Math.max(p,1))))+2));} return Math.max(3,Math.min(10,Math.ceil(Math.log10(Math.max(1,a))/Math.log10(Math.max(1,p/Math.max(r,1))))+2));}return Number(o)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function lpftopo(n){
+  // User-confirmed LPF hardware pattern: series L∥C resonator followed by a shunt C to GND.
+  // For odd order N, the physical preview uses (N-1)/2 L∥C resonators and (N+1)/2 shunt-C nodes.
+  const real=[
+    {lRef:'L806',l:150,cRef:'C830',c:10,shRef:'C837',sh:30},
+    {lRef:'L807',l:120,cRef:'C831',c:18,shRef:'C838',sh:39},
+    {lRef:'L808',l:150,cRef:'C832',c:1.5,shRef:'C839',sh:27},
+    {lRef:'C852',l:33,cRef:'C833',c:15,shRef:'C840',sh:'NL/22'},
+    {lRef:'L809',l:150,cRef:'C834',c:10,shRef:'C840',sh:22},
+    {lRef:'L810',l:120,cRef:'C835',c:8.2,shRef:'C841',sh:18},
+    {lRef:'L811',l:100,cRef:'C836',c:6.8,shRef:'C842',sh:15}
+  ];
+  const N=Math.max(1,Number(n)||1);
+  const cells=Math.max(0,Math.floor((N-1)/2));
+  const outCells=real.slice(0,Math.min(cells,real.length));
+  const shunts=[];
+  shunts.push({ref:'C853',v:39});
+  outCells.forEach((c)=>shunts.push({ref:c.shRef,v:c.sh}));
+  return {pre:[],cells:outCells,shunts,post:[]};
+}
+function hpftopo(n){
+  const N=Math.max(1,Number(n)||1);
+  const series=Math.ceil(N/2), branches=Math.floor((N-1)/2);
+  const a=[];
+  for(let k=1;k<=series;k++){
+    a.push({kind:'Cser',ref:'C'+(2*k-1),v:'—',unit:'pF'});
+    if(k<=branches) a.push({kind:'branch',cRef:'C'+(2*k),lRef:'L'+(2*k),cv:'—',lv:'—'});
+  }
+  return a;
+}
+function escAttr(v){return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function wire(x1,y1,x2,y2){return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#28323f" stroke-width="3"/>`}
+function ground(x,y){return `<line x1="${x}" y1="${y-42}" x2="${x}" y2="${y}" stroke="#28323f" stroke-width="3"/><line x1="${x-24}" y1="${y}" x2="${x+24}" y2="${y}" stroke="#28323f" stroke-width="3"/><line x1="${x-16}" y1="${y+8}" x2="${x+16}" y2="${y+8}" stroke="#28323f" stroke-width="3"/><line x1="${x-8}" y1="${y+16}" x2="${x+8}" y2="${y+16}" stroke="#28323f" stroke-width="3"/>`}
+function capVertical(x,y,label){return `${wire(x,y-42,x,y-14)}<line x1="${x-18}" y1="${y-14}" x2="${x+18}" y2="${y-14}" stroke="#2f6fa8" stroke-width="4"/><line x1="${x-18}" y1="${y+2}" x2="${x+18}" y2="${y+2}" stroke="#2f6fa8" stroke-width="4"/>${wire(x,y+2,x,y+42)}<text x="${x+26}" y="${y-5}" font-size="13" font-weight="700">${escAttr(label)}</text>`}
+function capVerticalGround(x,y,label){return `${capVertical(x,y,label)}${ground(x,y+84)}`}
+function capSeries(x,y,label){return `${wire(x-42,y,x-14,y)}<line x1="${x-14}" y1="${y-18}" x2="${x-14}" y2="${y+18}" stroke="#2f6fa8" stroke-width="4"/><line x1="${x+2}" y1="${y-18}" x2="${x+2}" y2="${y+18}" stroke="#2f6fa8" stroke-width="4"/>${wire(x+2,y,x+42,y)}<text x="${x-8}" y="${y-28}" text-anchor="middle" font-size="13" font-weight="700">${escAttr(label)}</text>`}
+function indSeries(x,y,label){let path=`M ${x-42} ${y} q 10 -24 20 0 q 10 -24 20 0 q 10 -24 20 0 q 10 -24 20 0`;return `${wire(x-42,y,x-42,y)}<path d="${path}" fill="none" stroke="#8b6b22" stroke-width="4"/>${wire(x+38,y,x+42,y)}<text x="${x}" y="${y-28}" text-anchor="middle" font-size="13" font-weight="700">${escAttr(label)}</text>`}
+function indVertical(x,y,label){let path=`M ${x} ${y-42} q -24 10 0 20 q -24 10 0 20 q -24 10 0 20 q -24 10 0 20`;return `${wire(x,y-42,x,y-42)}<path d="${path}" fill="none" stroke="#8b6b22" stroke-width="4"/>${wire(x,y+38,x,y+42)}<text x="${x+28}" y="${y+4}" font-size="13" font-weight="700">${escAttr(label)}</text>`}
+function shuntCL(x,y,cLabel,lLabel){let top=y+12, mid=y+58, bot=y+104;return `${wire(x,y,x,top)}<line x1="${x-18}" y1="${top}" x2="${x+18}" y2="${top}" stroke="#2f6fa8" stroke-width="4"/><line x1="${x-18}" y1="${top+14}" x2="${x+18}" y2="${top+14}" stroke="#2f6fa8" stroke-width="4"/><text x="${x+26}" y="${top+12}" font-size="13" font-weight="700">${escAttr(cLabel)}</text>${wire(x,top+14,x,mid)}<path d="M ${x} ${mid} q -22 10 0 20 q -22 10 0 20 q -22 10 0 20" fill="none" stroke="#8b6b22" stroke-width="4"/>${wire(x,mid+60,x,bot)}<text x="${x+26}" y="${mid+38}" font-size="13" font-weight="700">${escAttr(lLabel)}</text>${ground(x,bot+42)}`}
+function lpfCell(x,y,cell){
+ const left=x-42,right=x+42;
+ let out='';
+ // L and C share exactly the same two electrical nodes: L || C.
+ out+=indSeries(x,y,`${cell.lRef} ${cell.l}nH`);
+ out+=capSeries(x,y-70,`${cell.cRef} ${cell.c}pF`);
+ out+=wire(left,y-70,left,y);
+ out+=wire(right,y-70,right,y);
+ return out;
+}
+function resistorSeries(x,y,label){let pts=`M ${x-42} ${y} l 10 -10 l 10 20 l 10 -20 l 10 20 l 10 -10`;return `${wire(x-55,y,x-42,y)}<path d="${pts}" fill="none" stroke="#5b6570" stroke-width="4"/>${wire(x+8,y,x+20,y)}<text x="${x-18}" y="${y-28}" text-anchor="middle" font-size="13" font-weight="700">${escAttr(label)}</text>`}
+function drawLPF(n){
+ let svg=$('svg'),w=1900,h=620,y=270;
+ const cfg=lpftopo(n),cells=cfg.cells;
+ let out=`<rect x="0" y="0" width="${w}" height="${h}" fill="#fff"/>`;
+ out+=`<text x="45" y="38" font-size="24" font-weight="800">Elliptic Lowpass — ${n}th Order</text>`;
+ out+=`<text x="45" y="64" font-size="14" fill="#697586">Real LPF topology: L∥C resonators + shunt C</text>`;
+ let x=70;
+ out+=wire(x,y,x+55,y)+`<text x="20" y="264" font-size="13" font-weight="700">PORT 1</text>`; x+=55;
+ // User-confirmed LPF starts directly at the real L∥C network.
+ out+=wire(x,y,x+42,y); x+=42;
+ out+=capVerticalGround(x,y+72,'C853 39pF');
+ for(let i=0;i<cells.length;i++){
+   const c=cells[i];
+   const cx=x+84;
+   // Connect node to the left terminal of the L||C resonator.
+   out+=wire(x,y,cx-42,y);
+   out+=lpfCell(cx,y,c);
+   x=cx+42;
+   // Shunt capacitor is placed on the right node of this resonator.
+   out+=wire(x,y,x+42,y); x+=42;
+   const shRef=c.shRef;
+   out+=capVerticalGround(x,y+72,`${shRef} ${c.sh}pF`);
+ }
+ // User-confirmed LPF ends directly at Port 2.
+ out+=wire(x,y,x+70,y)+`<text x="${x+18}" y="264" font-size="13" font-weight="700">PORT 2</text>`;
+ svg.innerHTML=out;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+}
+function drawHPF(n){
+ let svg=$('svg'),w=1550,h=600,y=250;
+ const N=Math.max(1,Number(n)||1);
+ const series=Math.ceil(N/2),branches=Math.floor((N-1)/2);
+ let out=`<rect x="0" y="0" width="${w}" height="${h}" fill="#fff"/>`;
+ out+=`<text x="45" y="38" font-size="24" font-weight="800">Inverse Chebyshev Highpass — ${n}th Order</text>`;
+ out+=`<text x="45" y="64" font-size="14" fill="#697586">Real HPF topology: series C + shunt series C-L branches</text>`;
+ let x=70;
+ out+=wire(x,y,x+55,y)+`<text x="20" y="244" font-size="13" font-weight="700">PORT 1</text>`; x+=55;
+ for(let k=1;k<=series;k++){
+   const cx=x+42;
+   out+=capSeries(cx,y,`C${2*k-1}`);
+   x=cx+42;
+   if(k<=branches){
+     // This node is exactly the same electrical node as the series-C output.
+     out+=shuntCL(x,y,`C${2*k}`,`L${2*k}`);
+     out+=wire(x,y,x+84,y);
+     x+=84;
+   }
+ }
+ out+=wire(x,y,x+90,y)+`<text x="${x+48}" y="244" font-size="13" font-weight="700">PORT 2</text>`;
+ svg.innerHTML=out;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+}
+function draw(){let n=effectiveOrder();state.order=n;$('orderBadge').textContent='Order '+n;$('designTitle').textContent=state.type==='LPF'?'LPF — Elliptic':'HPF — Inverse Chebyshev';state.parts=state.type==='LPF'?lpftopo(n):hpftopo(n);if(state.type==='LPF'){drawLPF(n);$('status').textContent=`LPF real hardware topology · Order ${n} · Pass ${num('pass')} MHz · Rejection ${num('reject')} MHz · ${num('att')} dB`;}else{drawHPF(n);$('status').textContent=`HPF real topology · Order ${n} · Pass ${num('pass')} MHz · Rejection ${num('reject')} MHz · ${num('att')} dB`;}renderManual();drawChart()}
+function renderManual(){let el=$('manual');if(state.type==='LPF'){const c=state.parts.cells;let items=state.parts.pre.map(p=>`<div class="m"><div class="mhead">${p.ref}</div><div class="mrow"><span>${p.unit}</span><input type="number" value="${p.v}" step="1"><button class="pm">−</button><button class="pm">+</button></div></div>`).join('');items+=c.map((p)=>`<div class="m"><div class="mhead">${p.lRef} ∥ ${p.cRef}</div><div class="mrow"><span>${p.lRef} (nH)</span><input type="number" value="${p.l}" step="1"><button class="pm">−</button><button class="pm">+</button></div><div class="mrow"><span>${p.cRef} (pF)</span><input type="number" value="${p.c}" step="1"><button class="pm">−</button><button class="pm">+</button></div><div class="mrow"><span>${p.shRef} (pF)</span><input type="number" value="${p.sh}" step="1"><button class="pm">−</button><button class="pm">+</button></div></div>`).join('');el.innerHTML=items;return;}el.innerHTML=state.parts.map((p,i)=>p.kind==='Cser'?`<div class="m"><div class="mhead">${p.ref}</div><div class="mrow"><span>${p.ref} (pF)</span><input type="number" value="${p.v==='—'?30:p.v}" step="1"><button class="pm">−</button><button class="pm">+</button></div></div>`:`<div class="m"><div class="mhead">${p.cRef} / ${p.lRef}</div><div class="mrow"><span>${p.cRef} (pF)</span><input type="number" value="${p.cv==='—'?30:p.cv}" step="1"><button class="pm">−</button><button class="pm">+</button></div><div class="mrow"><span>${p.lRef} (nH)</span><input type="number" value="${p.lv==='—'?30:p.lv}" step="1"><button class="pm">−</button><button class="pm">+</button></div></div>`).join('')}
+function drawChart(){let c=$('chart'),ctx=c.getContext('2d'),w=c.width=c.clientWidth*2,h=c.height=320*2;ctx.scale(2,2);w/=2;h/=2;ctx.fillStyle='#0e1218';ctx.fillRect(0,0,w,h);let pad={l:42,r:16,t:18,b:28},pw=w-pad.l-pad.r,ph=h-pad.t-pad.b;ctx.strokeStyle='#293241';ctx.lineWidth=1;for(let i=0;i<=5;i++){let y=pad.t+i*ph/5;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+pw,y);ctx.stroke()}for(let i=0;i<=6;i++){let x=pad.l+i*pw/6;ctx.beginPath();ctx.moveTo(x,pad.t);ctx.lineTo(x,pad.t+ph);ctx.stroke()}let p=num('pass'),r=num('reject'),yb=num('yb'),yt=num('yt'),type=state.type,n=state.order;function s21(f){if(type==='LPF'){let q=f/p;return Math.max(yb, -0.2*Math.pow(q,2*n)*20/(1+Math.pow(q,2*n))*0.05 - (f>r?num('att')*(f-r)/(Math.max(r,p)*2):0));}else{let q=p/Math.max(f,0.01);return Math.max(yb, -0.2*Math.pow(q,2*n)*20/(1+Math.pow(q,2*n))*0.05 - (f<r?num('att')*(r-f)/(Math.max(p,r)*2):0));}}function s11(f){let v=s21(f);return Math.max(yb,Math.min(yt,-Math.abs(v)*0.15-1));}function plot(fn){ctx.beginPath();for(let i=0;i<=500;i++){let t=i/500;let f=num('xs')*Math.pow(Math.max(num('xe')/Math.max(num('xs'),0.01),1.001),t);let val=Math.max(yb,Math.min(yt,fn(f)));let x=pad.l+t*pw,y=pad.t+(yt-val)/(yt-yb)*ph;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke()}if($('s21').checked){ctx.strokeStyle='#63c7ff';ctx.lineWidth=2;plot(s21)}if($('s11').checked){ctx.strokeStyle='#ffd66b';ctx.lineWidth=2;plot(s11)}}
+$('type').onchange=()=>{state.type=$('type').value;draw()};$('order').onchange=draw;['pass','reject','att','z1','z2','xs','xe','yb','yt'].forEach(id=>$(id).addEventListener('input',draw));$('s21').onchange=drawChart;$('s11').onchange=drawChart;$('calc').onclick=draw;$('reset').onclick=()=>{location.reload()};window.addEventListener('resize',drawChart);draw();
+</script>
+</body></html>
