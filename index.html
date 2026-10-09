@@ -63,6 +63,7 @@ button{background:#1769aa;color:#fff;border:0;font-weight:700}
     <button class="menuBtn" onclick="showProduct()"><span>📦</span>產品查詢</button>
     <button class="menuBtn" onclick="showPart()"><span>🏷️</span>料號查詢</button>
     <button class="menuBtn" onclick="showFilter()"><span>📡</span>Filter Simulation</button>
+    <button class="menuBtn" onclick="showDebug()"><span>🛠️</span>DOCSIS Debugging</button>
    </div>
   </div>
  </div>
@@ -132,6 +133,9 @@ function showPart(){
 }
 function showFilter(){
  window.location.href="Filter_Simulator_V15_4_Optimized.html";
+}
+function showDebug(){
+ window.location.href="DOCSIS_Hardware_Debug_V14.html";
 }
 function loadModels(){
  const select=document.getElementById("modelSelect");
